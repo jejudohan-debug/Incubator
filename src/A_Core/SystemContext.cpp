@@ -1,12 +1,13 @@
 #include "SystemContext.h"
 
-SystemContext& SystemContext::getInstance()
+SystemContext &SystemContext::getInstance()
 {
     static SystemContext instance;
     return instance;
 }
 
-LiquidCrystal_I2C& SystemContext::getLcd(){
+/*LiquidCrystal_I2C &SystemContext::getLcd()
+{
     static LiquidCrystal_I2C lcd{0x27, 16, 2};
     static bool isInitialized = false;
     if (!isInitialized)
@@ -16,24 +17,28 @@ LiquidCrystal_I2C& SystemContext::getLcd(){
         isInitialized = true;
     }
     return lcd;
-}
+}*/
 
-DisplayState& SystemContext::getView() {
+DisplayState &SystemContext::getView()
+{
     static DisplayState view;
     return view;
 }
 
-EventQueue& SystemContext::getQueue() {
-    static EventQueue queue;
+ActionQueue &SystemContext::getActionQueue()
+{
+    static ActionQueue queue;
     return queue;
 }
 
-SystemConfig& SystemContext::getConfig() {
+/*SystemConfig &SystemContext::getConfig()
+{
     static SystemConfig config;
     return config;
-}
+}*/
 
-SpeciesContext& SystemContext::getSpeciesContext() {
+SpeciesContext &SystemContext::getSpeciesContext()
+{
     static SpeciesContext speciesContext;
     return speciesContext;
 }

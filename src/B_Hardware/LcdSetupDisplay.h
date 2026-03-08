@@ -5,23 +5,31 @@
 #include "A_Core/SystemContext.h"
 #include "A_Core/Interfaces.h"
 
-class LcdSetupDisplay : public ILcdDisplay
+class LcdSetupDisplay   // : public ILcdDisplay
 {
 private:
-    LiquidCrystal_I2C &_lcd = SystemContext::getLcd();
-    DisplayState &_view = SystemContext::getView();
-
     using RenderFunc = void (LcdSetupDisplay::*)();
     static const RenderFunc _renderTable[];
-    static const char *setupTitle[];
+    static const char* const setupTitle[];
+
+    LiquidCrystal_I2C &_lcd;
+
+    DisplayState &_view = SystemContext::getInstance().getView();
+    SpeciesContext &_species = SystemContext::getInstance().getSpeciesContext();
 
 public:
-    LcdSetupDisplay() {}
-    virtual ~LcdSetupDisplay() {}
+    LcdSetupDisplay(LiquidCrystal_I2C& lcd)
+        : _lcd(lcd) {}
+    
+    virtual void init() {}
+    virtual void update();
 
-    virtual void init() override {}
-    virtual void update() override;
-    virtual void clear() override;
+private:
+    void renderConfirmTitle(uint8_t index);
+    void renderSetupTitle(uint8_t index);
+    void renderSetupValue(uint8_t index);
+
+    void printFormatValue(float value);
 
     void renderSpecies();
     void renderDay();
@@ -30,7 +38,5 @@ public:
     void renderTemperature();
     void renderHumidity();
     void renderTurnInterval();
-
-    // 확인 대기 상태 렌더링
-    void renderConfirm();
+    void renderTurnDuration();
 };

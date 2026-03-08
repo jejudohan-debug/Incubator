@@ -1,0 +1,38 @@
+#pragma once
+#include "CoreTypes.h"
+
+class EventQueue {
+private:
+    static const uint8_t QUEUE_SIZE = 5;
+    EventStruct _buffer[QUEUE_SIZE];
+    uint8_t _head = 0;
+    uint8_t _tail = 0;
+    uint8_t _count = 0;
+
+public:
+    bool push(DeviceIdx idx, DeviceEvent event) {
+        if (_count >= QUEUE_SIZE) return false;
+
+        _buffer[_head].idx = idx;
+        _buffer[_head].event = event;
+        _head = (_head + 1) % QUEUE_SIZE;
+        _count++;
+        return true;
+    }
+
+    bool pop(EventStruct &outEvent) {
+        if (_count == 0) return false;
+
+        outEvent = _buffer[_tail];
+        _tail = (_tail + 1) % QUEUE_SIZE;
+        _count--;
+        return true;
+    }
+
+    bool isEmpty() const { return _count == 0; }
+
+    /* EventStruct ev;
+    if (queue.pop(ev)) {
+        // ev 데이터를 사용해서 로직 수행 (안전함)
+    } */
+};

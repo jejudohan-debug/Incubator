@@ -1,0 +1,130 @@
+class IObserver
+{
+public:
+    virtual ~IObserver() {}
+    virtual void onNotify(EventFlag::Type flag, const float value) {}
+    virtual void onNotify(EventFlag::Type flag, const uint8_t value) {}
+    virtual void onNotify(EventFlag::Type flag, const uint32_t value) {}
+    virtual void onNotify(EventFlag::Type flag, const SystemConfig &value) {}
+};
+
+class Subject
+{
+private:
+    IObserver *_observers[OBSERVER_CNT]; // 구독자 명단 (최소한으로 설정)
+    uint8_t _count = 0;
+
+public:
+    virtual ~Subject() {}
+    void addObserver(IObserver *obs)
+    {
+        if (_count < OBSERVER_CNT)
+            _observers[_count++] = obs;
+    }
+
+    void notify(UpdateFlag::Type flag, float value)
+    {
+        for (uint8_t i = 0; i < _count; i++)
+        {
+            _observers[i]->onNotify(flag, value);
+        }
+    }
+};
+
+// 센서에 Subject 기능 추가
+class TempSensor : public ISensor, public Subject {
+    float _lastValue;
+public:
+    void update() override {
+        float newValue = _parent->readPhysical();
+        if (newValue != _lastValue) {
+            _lastValue = newValue;
+            notify(UpdateFlag::C_TEMP, newValue); // 값이 바뀌면 즉시 알림!
+        }
+    }
+};
+
+// 화면 관리자가 소식을 듣는 Observer가 됨
+class DisplayManager : public IObserver {
+    DisplayState& _state;
+public:
+    DisplayManager(DisplayState& state) : _state(state) {}
+
+    void onNotify(UpdateFlag::Type flag, float value) override {
+        // 소식을 받으면 상태 업데이트 및 플래그 세우기
+        if (flag == UpdateFlag::C_TEMP) {
+            _state.currentTemp = value;
+            _state.updateFlags |= UpdateFlag::C_TEMP;
+        }
+    }
+};
+
+// main.ino 또는 App 클래스 내에서
+void setup() {
+    // 1. 객체 생성
+    static DisplayState state;
+    static InputManager input; // 내부에 센서들이 있음
+    static DisplayManager display(state);
+
+    // 2. 외부에서 연결 (중매)
+    input.getTempSensor().addObserver(&display);
+    input.getHumiSensor().addObserver(&display);
+}
+// --- 여러가지 값
+class IObserver {
+public:
+    virtual void onNotify(UpdateFlag::Type flag, float value) {}    // float용
+    virtual void onNotify(UpdateFlag::Type flag, uint8_t value) {}  // uint8_t용
+    virtual void onNotify(UpdateFlag::Type flag, uint32_t value) {} // uint32_t용
+};
+
+// 보낼 때 (uint8_t -> float으로 자동 형변환)
+uint8_t day = 25;
+notify(UpdateFlag::TIME_D, (float)day);
+
+// 받을 때
+void onNotify(UpdateFlag::Type flag, float value) override {
+    if (flag == UpdateFlag::TIME_D) {
+        _state.d = (uint8_t)value; // 다시 변환
+    }
+}
+
+class InputManager {
+    const DisplayState& _state; // 읽기 전용으로 참조
+public:
+    InputManager(const DisplayState& state) : _state(state) {}
+};
+
+class DisplayManager {
+    const DisplayState& _state; // 읽기 전용으로 참조 (그리기만 함)
+public:
+    DisplayManager(const DisplayState& state) : _state(state) {}
+};
+
+class AppController {
+    DisplayState& _state; // 여기만 수정 가능 (Write 권한)
+public:
+    AppController(DisplayState& state) : _state(state) {}
+    
+    void changePage() {
+        _state.step = PageStep::SETUP; // 수정 가능!
+    }
+};
+// --- flag 처리 ----
+EventFlag::Type currentEvent = EventFlag::NONE;
+
+// 플래그 추가 (버튼 UP과 온도가 변했을 때)
+currentEvent |= (EventFlag::BTN_UP | EventFlag::DHT_TEMP);
+
+// 특정 플래그가 포함되어 있는지 확인
+if (currentEvent & EventFlag::BTN_UP) {
+    // 버튼 UP 이벤트 처리
+}
+
+// 특정 플래그만 제거
+currentEvent &= ~EventFlag::BTN_UP;
+
+// --- struct notify 예시 로직
+Config myConfig;
+loadFromEEPROM(&myConfig); // RTC 모듈 등에 연결된 메모리에서 로드
+notify(EventFlag::RTC_LOAD, &myConfig);

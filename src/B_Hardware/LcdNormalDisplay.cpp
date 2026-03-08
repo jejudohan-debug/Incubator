@@ -1,39 +1,111 @@
-//#include "LcdDevice.h"
 #include "LcdNormalDisplay.h"
-#include "LcdDisplay.h"
 
-const LcdNormalDisplay::RenderFunc LcdNormalDisplay::_renderTable[] = {
-    &LcdNormalDisplay::renderEnv,
-    &LcdNormalDisplay::renderRelays,
-    &LcdNormalDisplay::displayConfig
-};
+// 부화 기간을 21일(기본값)로 가정했을 때의 계산
+const uint8_t BAR_BLOCK_COUNT = 6;
+const uint8_t PIXELS_PER_BLOCK = 5;
+const uint8_t BAR_START_COL = 9;
+const uint8_t TOTAL_DAYS = 21;
 
-void LcdNormalDisplay::clear() { _lcd.clear(); }
+void LcdNormalDisplay::printFormatInt(const __FlashStringHelper *label, int value)
+{
+    if (label)
+        _lcd.print(label);
+    if (value < 10)
+        _lcd.write('0');
+    _lcd.print(value);
+}
+
+void LcdNormalDisplay::printFormatUint16(const __FlashStringHelper *label, uint16_t value)
+{
+    if (label)
+        _lcd.print(label);
+
+    char buf[6];
+    _view.uint16ToString(buf, value);
+    _lcd.print(buf);
+}
+
+/*void LcdNormalDisplay::printFormatValue(uint16_t value)
+{
+    char buf[6];
+
+    if (value > 999)
+        value = 999;
+
+    uint16_t integral = value / 10;
+    uint8_t fractional = value % 10;
+
+    buf[0] = (integral / 10) + '0';
+    buf[1] = (integral % 10) + '0';
+    buf[2] = '.';
+    buf[3] = fractional + '0';
+    buf[4] = '\0';
+
+    _lcd.print(buf);
+}*/
+
 void LcdNormalDisplay::update()
 {
-    if (_view.isUpdated) {
-        _lcd.clear();
-        _lcd.setCursor(0,0);
-        uint8_t pageIdx = static_cast<uint8_t>(_view.normal.page);
-        (this->*_renderTable[pageIdx])();
-
-        _lcd.setCursor(0,1);
-        renderTime();
-
-        _view.isUpdated = false;
+    if (_view.getPageStep() == PageStep::ENV)
+    {
+        if (_view.updateFlags)
+        {
+            renderEnv();
+            renderRelay();
+            renderTime();
+        }
+        animateProgressBsr();
     }
-    animateProgressBsr();
+    else
+    {
+        if (_view.updateFlags)
+        {
+            renderConfig();
+        }
+    }
 }
 
-void LcdNormalDisplay::renderTime() {
-    _lcd.print(formatDigits(_view.d, true));
-    _lcd.print(F("d "));
-    _lcd.print(formatDigits(_view.h, true));
-    _lcd.print(':');
-    _lcd.print(formatDigits(_view.m, true));
+void LcdNormalDisplay::renderConfig()
+{
+    SpeciesProfile profile = _species.getProfile(_view.getSpecies());
+    _lcd.setCursor(0, 0);
+    printFormatInt(F("Day:"), profile.totalDays);
+    printFormatInt(F(",Hat:"), profile.hatchStartDay);
+
+    renderRelay();
+
+    _lcd.setCursor(0, 1);
+     printFormatUint16(F("Hatch Humi:"), (int)profile.hatchHumi);
+    _lcd.write('%');
 }
 
-void LcdNormalDisplay::animateProgressBsr() {
+void LcdNormalDisplay::renderEnv()
+{
+    _lcd.setCursor(0, 0);
+    printFormatUint16(nullptr, _view.getCurrentTempFixed());
+    _lcd.write(223);
+    printFormatUint16(F("C, "), _view.getCurrentHumiFixed());
+    _lcd.write(37);
+}
+
+void LcdNormalDisplay::renderRelay()
+{  
+    _lcd.setCursor(13, 0);
+    _lcd.write(_view.getRelayHeat() ? 'H' : ' ');
+    _lcd.write(_view.getRelayFan() ? 'F' : ' ');
+    _lcd.write(_view.getRelayTurn() ? 'T' : ' ');
+}
+
+void LcdNormalDisplay::renderTime()
+{
+    _lcd.setCursor(0, 1);
+    printFormatInt(nullptr, _view.getElapsedDay());
+    printFormatInt(F("d "), _view.getElapsedHour());
+    printFormatInt(F(":"), _view.getElapsedMinute());
+}
+
+void LcdNormalDisplay::animateProgressBsr()
+{
     // 상태바 에니매이션
     static unsigned long _lastAnimTime = 0;
     static uint8_t _animStep = 0;
@@ -41,55 +113,82 @@ void LcdNormalDisplay::animateProgressBsr() {
     static uint8_t _targetPixels = 0;
     const unsigned long ANIM_INTERVAL = 500; // 0.5초마다 애니메이션 업데이트
 
-    if ((millis() - _lastAnimTime) < ANIM_INTERVAL) return;
+    if ((millis() - _lastAnimTime) < ANIM_INTERVAL)
+        return;
 
     _lastAnimTime = millis();
-    _targetPixels = (_view.d * BAR_BLOCK_COUNT * PIXELS_PER_BLOCK) / TOTAL_DAYS;
-    if (_targetPixels <= 0) _targetPixels = 1;
+    _targetPixels = (_view.getElapsedDay() * BAR_BLOCK_COUNT * PIXELS_PER_BLOCK) / TOTAL_DAYS;
+    if (_targetPixels <= 0)
+        _targetPixels = 1;
 
     _lcd.setCursor(BAR_START_COL, 1);
     uint8_t maxPixels = BAR_BLOCK_COUNT * PIXELS_PER_BLOCK - 1;
-    if (_animStep >= _targetPixels) {
+    if (_animStep >= _targetPixels)
+    {
         _waitCount++;
         uint8_t blinkStep = (_waitCount % 2 == 0) ? _targetPixels : (_targetPixels - 1);
         drawProgressBar(blinkStep, maxPixels);
-        if (_waitCount >= 10) { // 10번 애니메이션이 끝나면 대기 후 초기화
+        if (_waitCount >= 10)
+        { // 10번 애니메이션이 끝나면 대기 후 초기화
             _animStep = 0;
             _waitCount = 0;
         }
-    } else {
+    }
+    else
+    {
         _animStep++;
         drawProgressBar(_animStep, maxPixels);
     }
 }
 
-void LcdNormalDisplay::drawProgressBar(uint8_t filledPixels, uint8_t maxPixels) {
+void LcdNormalDisplay::drawProgressBar(uint8_t filledPixels, uint8_t maxPixels)
+{
+    _lcd.setCursor(BAR_START_COL, 1);
     _lcd.write(6); // 벽 문자
 
     // 2. 바 렌더링 (15번 칸부터 9번 칸까지 역순)
-    for (int8_t i = 0; i < BAR_BLOCK_COUNT; i++) {
-        uint8_t blockIndex = (BAR_BLOCK_COUNT - 1) - i;  
+    for (int8_t i = 0; i < BAR_BLOCK_COUNT; i++)
+    {
+        uint8_t blockIndex = (BAR_BLOCK_COUNT - 1) - i;
         uint8_t startPixelOfBlock = blockIndex * PIXELS_PER_BLOCK;
 
-        if (filledPixels >= startPixelOfBlock + PIXELS_PER_BLOCK) {
+        if (filledPixels >= startPixelOfBlock + PIXELS_PER_BLOCK)
+        {
             _lcd.write(5); // 꽉 찬 칸
-        } 
-        else if (filledPixels > startPixelOfBlock) {
+        }
+        else if (filledPixels > startPixelOfBlock)
+        {
             _lcd.write(filledPixels - startPixelOfBlock); // 1~4픽셀
-        } 
-        else {
+        }
+        else
+        {
             _lcd.write(0); // 빈 레일
         }
     }
 }
 
-void LcdNormalDisplay::renderEnv() {
-    _lcd.print(F("T:"));
-    _lcd.print(formatPaddedFloat(_view.normal.currentTemp, 4, 1));
-    _lcd.write(223);
-    _lcd.print(F("C H:"));
-    _lcd.print(formatPaddedFloat(_view.normal.currentHumi, 4, 1));
-    _lcd.write(37);
+/*void LcdNormalDisplay::renderProgressBar() {
+    uint8_t filledPixels =
+        (_view.d * BAR_BLOCK_COUNT * PIXELS_PER_BLOCK) / TOTAL_DAYS;
+    if (filledPixels <= 0) filledPixels = 1;
+
+    _lcd.write(6); // 벽 문자
+
+    // 2. 바 렌더링 (15번 칸부터 9번 칸까지 역순)
+    for (int8_t i = 0; i < BAR_BLOCK_COUNT; i++) {
+        uint8_t blockIndex = (BAR_BLOCK_COUNT - 1) - i;
+        uint8_t startPixelOfBlock = blockIndex * PIXELS_PER_BLOCK;
+
+        if (filledPixels >= startPixelOfBlock + PIXELS_PER_BLOCK) {
+            _lcd.write(5); // 꽉 찬 칸
+        }
+        else if (filledPixels > startPixelOfBlock) {
+            _lcd.write(filledPixels - startPixelOfBlock); // 1~4픽셀
+        }
+        else {
+            _lcd.write(0); // 빈 레일
+        }
+    }
 }
 
 void LcdNormalDisplay::renderRelays() {
@@ -104,4 +203,4 @@ void LcdNormalDisplay::renderRelays() {
 void LcdNormalDisplay::displayConfig() {
     _lcd.print(F("Species:"));
     _lcd.print(SpeciesContext::getSpeciesName(_view.species));
-}
+}*/

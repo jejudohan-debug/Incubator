@@ -5,35 +5,33 @@
 #include "A_Core/Interfaces.h"
 #include "A_Core/SystemContext.h"
 
-// 부화 기간을 21일(기본값)로 가정했을 때의 계산
-const uint8_t BAR_BLOCK_COUNT = 6;
-const uint8_t PIXELS_PER_BLOCK = 5;
-const uint8_t BAR_START_COL = 9;
-const uint8_t TOTAL_DAYS = 21;
-
-class LcdDisplay;
-
-class LcdNormalDisplay : public ILcdDisplay
+class LcdNormalDisplay // : public ILcdDisplay
 {
 private:
-    LiquidCrystal_I2C &_lcd = SystemContext::getLcd();
-    DisplayState &_view = SystemContext::getView();
-
     using RenderFunc = void (LcdNormalDisplay::*)();
     static const RenderFunc _renderTable[];
 
+    LiquidCrystal_I2C &_lcd;
+
+    DisplayState &_view = SystemContext::getInstance().getView();
+    SpeciesContext &_species = SystemContext::getInstance().getSpeciesContext();
+
 public:
-    LcdNormalDisplay() {}
-    virtual ~LcdNormalDisplay() {}
+    LcdNormalDisplay(LiquidCrystal_I2C &lcd)
+        : _lcd(lcd) {}
 
-    virtual void init() override {}
-    virtual void update() override;
-    virtual void clear() override;
+    virtual void init() {}
+    virtual void update();
 
+private:
+    void printFormatInt(const __FlashStringHelper *label, int value);
+    void printFormatUint16(const __FlashStringHelper *label, uint16_t value);
+
+    void renderEnv();
+    void renderRelay();
+    void renderConfig();
     void renderTime();
+    // void renderProgressBar();
     void animateProgressBsr();
     void drawProgressBar(uint8_t filledPixels, uint8_t maxPixels);
-    void renderEnv();
-    void renderRelays();
-    void displayConfig();
 };

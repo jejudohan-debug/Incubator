@@ -1,0 +1,25 @@
+#include <PID_v1.h>
+
+double Setpoint, Input, Output; // 목표온도, 현재온도, 제어량
+double Kp=2, Ki=5, Kd=1;        // PID 계수 (실험을 통해 튜닝 필요)
+PID myPID(&Input, &Output, &Setpoint, Kp, Ki, Kd, DIRECT);
+
+unsigned long windowSize = 2000; // 제어 주기 2초
+unsigned long windowStartTime;
+
+void setup() {
+  windowStartTime = millis();
+  Setpoint = 37.5; // 인큐베이터 목표 온도
+  myPID.SetOutputLimits(0, windowSize);
+  myPID.SetMode(AUTOMATIC);
+}
+
+void loop() {
+  Input = dht.readTemperature(); // 온도 센서값 읽기
+  myPID.Compute();
+
+  // PWM 방식의 SSR 제어
+  if (millis() - windowStartTime > windowSize) windowStartTime += windowSize;
+  if (Output > millis() - windowStartTime) digitalWrite(SSR_PIN, HIGH);
+  else digitalWrite(SSR_PIN, LOW);
+}

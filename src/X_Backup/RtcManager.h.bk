@@ -1,0 +1,25 @@
+#pragma once
+
+#include <Arduino.h>
+#include "A_Core/SystemContext.h"
+#include "B_Hardware/HardwareFactory.h"
+
+class RtcManager : public IManager {
+private:
+    RTCDevice& _rtc = HardwareFactory::getRTCDevice();
+
+    DisplayState& _view = SystemContext::getView();
+    EventQueue& _queue = SystemContext::getQueue();
+    SystemConfig& _config = SystemContext::getConfig();
+
+    uint32_t _lastUnixTime = 0;
+
+public:
+    RtcManager() = default;
+    void init() override;
+    void update() override;
+
+    uint32_t getCurrentTime();
+    void setCurrentTime(uint32_t unixTime);
+    bool saveConfig(const SystemConfig& config);
+};

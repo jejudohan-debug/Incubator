@@ -6,10 +6,10 @@
 
 class SensorManager : public IManager {
 private:
+    DHTSensor& _dhtSensor = HardwareFactory::getDHTSensor();
+    
     DisplayState& _view = SystemContext::getView();
     EventQueue& _queue = SystemContext::getQueue();
-
-    DHTSensor& _dhtSensor = HardwareFactory::getDHTSensor();
 
 public:
     SensorManager() = default;

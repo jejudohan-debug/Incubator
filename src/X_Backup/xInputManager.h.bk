@@ -1,0 +1,32 @@
+#pragma once
+
+#include <Arduino.h>
+#include "EventBtnManager.h"
+#include "EventSSorManager.h"
+#include "EventRtcManager.h"
+#include "ConfigRtcManager.h"
+
+class InputManager
+{
+private:
+    // Button* _btns[BUTTON_CNT];
+    Button::Group<3> &_btns;
+    DHTSensor &_dht;
+    RTCDevice &_rtc;
+
+    EventBtnManager _evtBtnMgr;
+    EventSSorManager _evtSsorMgr;
+    EventRtcManager _evtRtcMgr;
+    ConfigRtcManager _cfgRtcMgr;
+
+    // DisplayState &_view = SystemContext::getInstance().getView();
+    // ActionQueue &_actionQueue = SystemContext::getInstance().getActionQueue();
+
+public:
+    InputManager::InputManager(RTCDevice &rtc, DHTSensor &dht, Button::Group<3> &btns)
+        : _btns(btns), _dht(dht), _rtc(rtc),
+          _evtBtnMgr(btns), _evtSsorMgr(dht), _evtRtcMgr(rtc), _cfgRtcMgr(rtc) {}
+
+    void init();
+    void update();
+};

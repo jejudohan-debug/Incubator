@@ -1,0 +1,122 @@
+#include "EventRtcManager.h"
+
+// EventRtcManager::EventRtcManager(uint8_t dat, uint8_t clk, uint8_t rst)
+//     : _rtcDevice(dat, clk, rst) {}
+
+void EventRtcManager::init()
+{
+    _rtcDevice.init();
+    _rtcDevice.addObserver(this);
+
+    memset(&_config, 0, sizeof(SystemConfig));
+    load();
+    if (!isCurrect())
+    {
+        setDefultConfig(Species::CHICKEN);
+    }
+}
+
+void EventRtcManager::update()
+{
+    _rtcDevice.update();
+
+    if (UpdateFlag::hasFlag(_view.updateFlags, UpdateFlag::CFG_LOAD))
+    {
+        _rtcDevice.loadConfig(_config);
+    }
+    else if (UpdateFlag::hasFlag(_view.updateFlags, UpdateFlag::CFG_SAVE))
+    {
+        _rtcDevice.saveConfig(_config);
+    }
+}
+
+// RTC Minute Changed
+void EventRtcManager::onNotify(EventFlag::Type flag, const uint32_t value)
+{
+    if (flag != EventFlag::RTC_TIME)
+        return;
+
+    _view.setUnixTime(value);
+    _actionQueue.push(SystemAction::TIME_CHANGE);
+}
+
+void EventRtcManager::onNotify(EventFlag::Type flag, const SystemConfig &cfg)
+{
+    if (flag == EventFlag::RTC_LOAD)
+    {
+        load();
+    }
+    else if (flag == EventFlag::RTC_SAVE)
+    {
+        save();
+    }
+}
+
+uint8_t EventRtcManager::calculateChecksum(const SystemConfig &cfg)
+{
+    uint8_t *ptr = (uint8_t *)&cfg;
+    uint8_t sum = 0;
+    // 마지막 checksum 필드 전까지 루프
+    for (size_t i = 0; i < sizeof(SystemConfig) - 1; i++)
+    {
+        sum ^= ptr[i];
+    }
+    return sum;
+}
+
+void EventRtcManager::load()
+{
+    _rtcDevice.loadConfig(_config);
+}
+
+// 2. 데이터 저장 (직렬화)
+void EventRtcManager::save()
+{
+    _config.signature = MAGIC_SIG;
+    _config.checksum = calculateChecksum(_config);
+
+    _rtcDevice.saveConfig(_config);
+}
+
+bool EventRtcManager::isCurrect()
+{
+    if (_config.signature != MAGIC_SIG)
+        return false;
+    if (_config.checksum != calculateChecksum(_config))
+        return false;
+    return true;
+}
+
+// 3. 특정 종 선택 시 설정값 동기화
+void EventRtcManager::setSpecies(Species s)
+{
+    memset(&_config, 0, sizeof(SystemConfig));
+
+    const SpeciesProfile profile =
+        SystemContext::getInstance().getSpeciesContext().getProfile(s);
+
+    _config.signature = MAGIC_SIG;
+    _config.selectedSpecies = static_cast<uint8_t>(s);
+    _config.targetTemp = profile.targetTemp;
+    _config.targetHumi = profile.targetHumi;
+    _config.turnInterval = profile.turnInterval;
+    _config.incubationStartTime = _rtcDevice.getUnixTime();
+
+    save(); // 변경 즉시 NVRAM 저장
+}
+
+void EventRtcManager::setDefultConfig(Species defaultSpecies)
+{
+    const SpeciesProfile profile = SystemContext::getInstance()
+                                       .getSpeciesContext()
+                                       .getProfile(_config.selectedSpecies);
+
+    _config.signature = MAGIC_SIG;
+    _config.selectedSpecies = static_cast<uint8_t>(defaultSpecies);
+    _config.targetTemp = profile.targetTemp;
+    _config.targetHumi = profile.targetHumi;
+    _config.turnInterval = profile.turnInterval;
+    _config.incubationStartTime = _rtcDevice.getUnixTime();
+
+    save();
+}

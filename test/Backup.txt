@@ -1,0 +1,164 @@
+// 백라이트 점멸
+void LcdNormalDisplay::updateBlink() {
+    // 500ms 간격으로 깜빡임
+    static uint32_t lastBlinkTime = 0;
+    static bool lightOn = true;
+
+    if (millis() - lastBlinkTime >= 500) {
+        lastBlinkTime = millis();
+        lightOn = !lightOn;
+
+        if (lightOn) {
+            _lcd.backlight();
+        } else {
+            _lcd.noBacklight();
+        }
+    }
+}
+
+// DHT 센서 업데이트 시
+void DHTSensor::update() {
+    float t = dht.readTemperature();
+    if (!isnan(t)) {
+        auto& view = SystemContext::getView();
+        view.normal.currentTemp = t;
+        // 온습도 비트만 1로 셋팅 (나머지 비트는 유지)
+        view.isUpdated |= UpdateFlag::ENV; 
+    }
+}
+
+void Display::render(const DisplayState& view) {
+    if (view.isUpdated == UpdateFlag::NONE) return;
+
+    // 모드나 종이 바뀌었다면 배경부터 새로 그려야 함
+    if (view.isUpdated & (UpdateFlag::MODE | UpdateFlag::SPECIES)) {
+        drawBackground(view.mode, view.species);
+    }
+
+    // 시간 비트가 켜졌다면 시간 위치만 지우고 다시 쓰기
+    if (view.isUpdated & UpdateFlag::TIME) {
+        drawTime(view.d, view.h, view.m);
+    }
+
+    // 온습도 비트가 켜졌다면 숫자 영역만 갱신
+    if (view.isUpdated & UpdateFlag::ENV) {
+        drawEnvData(view.normal.currentTemp, view.normal.currentHumi);
+    }
+
+    // 처리가 끝났으므로 매니저에서 플래그를 클리어함
+}
+
+//--------------------
+struct DisplayState {
+    uint8_t isUpdated;
+    SystemModes mode;
+    // ... 공통 데이터
+    
+    union {
+        NormalData normal;
+        SetupData setup;
+    }; // 두 데이터 중 큰 놈만큼만 RAM 차지
+};
+
+state.updateFlags |= (UpdateFlag::C_TEMP | UpdateFlag::WAITING);
+플래그 세우기 (Set): state.updateFlags |= UpdateFlag::C_TEMP;
+플래그 확인 (Check): if (state.updateFlags & UpdateFlag::C_TEMP) { ... }
+플래그 제거 (Clear): state.updateFlags &= ~UpdateFlag::C_TEMP;
+
+//--------------------------------
+// 1. 센서 공통 인터페이스
+class ISensor {
+public:
+    virtual void update() = 0;
+    virtual bool isAvailable() const = 0;
+};
+
+// 2. 물리적 통합 장치 (Manager 역할)
+class DHTSensor {
+private:
+    // 실제 센서 값 (자식들이 공유)
+    float _rawTemp = 0.0f;
+    float _rawHumi = 0.0f;
+    bool _isOk = false;
+    uint8_t _pin;
+
+public:
+    DHTSensor(uint8_t pin) : _pin(pin), temp(this), humi(this) {}
+
+    // 물리적 읽기 수행 (자식들이 이 함수를 호출하게 됨)
+    void readPhysical() {
+        // 여기서 실제 dht.read() 수행
+        _isOk = true; 
+        _rawTemp = 24.5; // 예시
+    }
+
+    // 내부 클래스로 구현하여 DHTSensor의 private 멤버에 접근 가능하게 함
+    class TempSensor : public ISensor {
+        DHTSensor* _parent;
+    public:
+        TempSensor(DHTSensor* p) : _parent(p) {}
+        void update() override { _parent->readPhysical(); }
+        bool isAvailable() const override { return _parent->_isOk; }
+        float getValue() { return _parent->_rawTemp; }
+    } temp;
+
+    class HumiSensor : public ISensor {
+        DHTSensor* _parent;
+    public:
+        HumiSensor(DHTSensor* p) : _parent(p) {}
+        void update() override { _parent->readPhysical(); }
+        bool isAvailable() const override { return _parent->_isOk; }
+        float getValue() { return _parent->_rawHumi; }
+    } humi;
+};
+
+class InputManager {
+private:
+    // 1. 물리적 장치 생성 (이때 내부의 temp, humi도 자동 생성됨)
+    DHTSensor _dhtDevice;
+    RTCDevice _rtcDevice;
+
+    // 2. 인터페이스로 관리할 포인터 배열
+    ISensor* _sensors[3];
+
+public:
+    // 3. 생성자 초기화 리스트에서 배열에 주소를 할당
+    InputManager() : 
+        _dhtDevice(Pins::DHT), // 핀 번호 전달
+        _rtcDevice(Pins::RTC_DAT, Pins::RTC_CLK, Pins::RTC_RST),
+        _sensors{
+            &_dhtDevice.temp, // DHT 내부의 TempSensor 주소
+            &_dhtDevice.humi, // DHT 내부의 HumiSensor 주소
+            &_rtcDevice       // RTC 주소
+        } 
+    {}
+
+    void updateAll() {
+        for (ISensor* s : _sensors) {
+            s->update();
+        }
+    }
+};
+
+void updateAll() {
+    // 버튼 업데이트 (입력 체크)
+    for (auto btn : _buttons) {
+        btn->update();
+    }
+
+    // 센서 업데이트 (데이터 갱신)
+    for (auto sensor : _sensors) {
+        if (sensor->isAvailable()) {
+            sensor->update();
+        }
+    }
+
+for (const auto* sensor : _sensors) {
+    if (sensor) sensor->update();
+}
+
+void loop() {
+    input.updateAll(); // 1. 모든 입력/센서 갱신
+    logic.process();   // 2. 비즈니스 로직 처리
+    view.render();     // 3. 바뀐 부분만 화면 출력
+}

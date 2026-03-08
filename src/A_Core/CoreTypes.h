@@ -1,6 +1,21 @@
 #pragma once
 #include <arduino.h>
 
+template <typename T, size_t N>
+struct NormalGroup
+{
+    T data[N];
+
+    constexpr size_t size() const { return N; }
+    T &operator[](size_t i) { return data[i]; }
+
+    // 반복문을 위한 begin/end (포인터 반환)
+    T *begin() { return &data[0]; }
+    T *end() { return &data[N]; }
+    const T *begin() const { return &data[0]; }
+    const T *end() const { return &data[N]; }
+};
+
 enum class Species : uint8_t
 {
     CHICKEN = 0,
@@ -11,33 +26,27 @@ enum class Species : uint8_t
     COUNT
 };
 
-// --- UI 상태 ---
-enum class SystemModes : uint8_t
-{
-    NORMAL,
-    SETUP,
-    COUNT
-};
-
 enum class SystemAction : uint8_t
 {
     NONE = 0,
     // --- Normal Mode Actions ---
-    GO_SETUP,         // 설정 진입 (SELECT 1.5s)
-    SHOW_PAGE_ENV,    // 환경 정보 (온습도)
-    SHOW_PAGE_RELAYS, // 릴레이 상태
-    SHOW_PAGE_CONFIG, //
-    MOTOR_START,      // 모터 수동 시작
-    MOTOR_STOP,       // 모터 수동 정지
-
-    // --- Setup Mode Actions ---
-    END_SETUP,  // 설정 종료 (SELECT 1.5s 또는 20S 입력 없음)
-    MOVE_NEXT,  // 다음 단계 (SELECT Click)
-    VALUE_UP,   // 수치 증가 (UP Click)
-    VALUE_DOWN, // 수치 감소 (DOWN Click)
-    CONFIRM,    // 확인
-    SAVE_YES,   // 저장 확인: 예
-    SAVE_NO,    // 저장 확인: 아니오
+    // GO_SETUP,         // 설정 진입 (SELECT 1.5s)
+    // SHOW_PAGE_ENV, // 환경 정보 (온습도)
+    // SHOW_PAGE_RELAYS, // 릴레이 상태
+    // SHOW_PAGE_CONFIG, //
+    MOVE_NEXT, // 1: 다음 단계 (SELECT Click)
+    BUTTON_FIRST = MOVE_NEXT,
+    HEATER_START, // 2: 모터 수동 시작
+    HEATER_STOP,  // 3: 모터 수동 정지
+    FAN_START,
+    FAN_STOP,
+    TURN_START,
+    TURN_STOP,
+    VALUE_UP,   // 8: 수치 증가 (UP Click)
+    VALUE_DOWN, // 9: 수치 감소 (DOWN Click)
+    // CONFIRM,    // 확인
+    SAVE_YES, // 10: 저장 확인: 예
+    SAVE_NO,  // 11: 저장 확인: 아니오
     BUTTON_LAST = SAVE_NO,
     // --- DHT ---
     TEMP_CHANGE,
@@ -45,199 +54,172 @@ enum class SystemAction : uint8_t
     SENSOR_LAST = HUMI_CHANGE,
     // --- RTC ---
     TIME_CHANGE,
+    CFG_LOAD,
+    CFG_SAVE,
     // ----------
     COUNT
 };
-
-enum class NormalPage : uint8_t
+constexpr int operator-(SystemAction a, SystemAction b)
 {
-    ENV,
-    RELAYS,
+    return static_cast<int>(a) - static_cast<int>(b);
+}
+
+enum class PageStep : uint8_t
+{
+    ENV = 0,
     CONFIG,
-    COUNT
-};
-
-// 설정 모드 세부 단계
-enum class SetupStep : uint8_t
-{
-    SPECIES = 0,
+    SPECIES,
+    SETUP_FIRST = SPECIES,
     DAY,
     HOUR,
     MINUTE,
-    TEMPERATURE,
-    HUMIDITY,
+    TARGET_TEMP,
+    TARGET_HUMI,
     TURNINTERVAL,
-    COUNT
+    TURNDURATION,
+    COUNT,
+    SETUP_COUNT = COUNT - SETUP_FIRST
 };
-
-struct DeviceEvent
+constexpr int operator-(PageStep a, PageStep b)
 {
-    SystemAction action; // 이제 버튼 정보가 아닌 '의도'를 담습니다.
-};
-
-// 버튼 인덱스를 위한 열거형 (가독성용)
-enum class BtnIdx : uint8_t
-{
-    SELECT,
-    UP,
-    DOWN,
-    ENTER,
-    COUNT
-};
-
-enum class ButtonEvent : uint8_t
-{
-    NONE = 0, // 아무 일도 없음
-    // --- 버튼 ---
-    PRESS,        // 버튼이 눌렸음 (디바운스 후 안정된 상태)
-    CLICK,        // 짧게 딸깍 누름 (메뉴 이동, 선택)
-    LONG_PRESS,   // 2초 이상 꾹 누름 (설정 모드 진입, 리셋)
-    DOUBLE_CLICK, // (선택 사항) 빠르게 두 번 누름
-    ERROR_STATE,  // 버튼 회로 이상 등
-};
-
-enum class InternalState : uint8_t
-{
-    IDLE,       // 떼어진 상태
-    DEBOUNCING, // 신호 변동 중 (안정화 대기)
-    PRESSED,    // 눌린 상태 (안정화됨)
-    LONG_HELD   // 이미 롱 프레스 이벤트를 발생시킨 상태
-};
-
-enum class DeviceType : uint8_t
-{
-    UNKNOWN = 0,
-    // 액추에이터 계열
-    HEATER,
-    FAN,   // 히터 열 확산용 팬
-    MOTOR, // 전란 모터
-    // BUZZER,        // 알람용 부저
-    //  입력 및 센서 계열
-    DHT_SENSOR,
-    TEMP_SENSOR,
-    HUMIDITY_SENSOR,
-    BUTTON,
-    RTC_MODULE,
-    RTC_TIME_PROVIDER,
-    RTC_TIME_SETTER,
-    RTC_CONFIG_STORAGE,
-    LCD_DEVICE,
-    LCD_DISPLAY
-};
-
-namespace Config
-{
-    // 안전 관련 설정
-    namespace Safety
-    {
-        const int TEMP_MIN_SAFE = 0;
-        const int TEMP_MAX_SAFE = 50;
-        const int MAX_DEVICES = 10;
-    }
-
-    // 하드웨어 타이밍 설정
-    namespace Timing
-    {
-        const unsigned long BUTTON_DEBOUNCE = 50;     // 50ms
-        const unsigned long BUTTON_LONG_PRESS = 1500; // 1.5초
-    }
-};
+    return static_cast<int>(a) - static_cast<int>(b);
+}
 
 struct SpeciesProfile
 {
     const char *name;
-    int totalDays;     // 총 부화 기간
-    int hatchStartDay; // 파각 시작일
-    float targetTemp;
-    float targetHumi;
-    float hatchHumi;  // 파각기 습기
-    int turnInterval; // 분 단위 전란주기
+    uint8_t totalDays;     // 총 부화 기간
+    uint8_t hatchStartDay; // 파각 시작일
+    uint16_t targetTemp;
+    uint16_t targetHumi;
+    uint16_t hatchHumi;    // 파각기 습기
+    uint16_t turnInterval; // 분 단위 전란주기
+
+    float getTargetTemp() const { return targetTemp / 10.0f; }
+    float getTargetHumi() const { return targetHumi / 10.0f; }
+    float getHatchHumi() const { return hatchHumi / 10.0f; }
 };
 
-struct NormalData
+namespace EventFlag
 {
-    NormalPage page = NormalPage::ENV;
-    float currentTemp = -1.0;
-    float currentHumi = -1.0;
-    uint8_t relayBits = 0;
+    using Type = uint16_t;
 
-    bool operator==(const NormalData &other) const
+    const Type NONE = 0;
+    const Type BTN_SELECT = 1 << 0;
+    const Type BTN_UP = 1 << 1;
+    const Type BTN_DOWN = 1 << 2;
+    const Type DHT_TEMP = 1 << 3;
+    const Type DHT_HUMI = 1 << 4;
+    const Type RTC_TIME = 1 << 5;
+    const Type RTC_LOAD = 1 << 6;
+    const Type RTC_SAVE = 1 << 7;
+
+    const Type RELAY_ON_DONE = 1 << 8;
+    const Type RELAY_OFF_DONE = 1 << 9;
+    const Type RELAY_ERROR = 1 << 10;
+    const Type ALL = 0xFF;
+
+    inline bool hasFlag(Type source, Type target)
     {
-        return (page == other.page &&
-                currentTemp == other.currentTemp &&
-                currentHumi == other.currentHumi &&
-                relayBits == other.relayBits);
+        return (source & target) != 0;
     }
-};
+}
 
-// 2. Setup 모드에서만 사용하는 데이터
-struct SetupData
+// 버튼용 옵저버 onNotify event
+// void onNotify(EventFlag::Type flag, const uint8_t value)
+enum class ButtonEvent : uint8_t
 {
-    SetupStep step = SetupStep::SPECIES;
-    bool isWaitingConfirm = false;
-    float targetTemp = -1.0;
-    float targetHumi = -1.0;
-    uint32_t turnInterval = 0;
-
-    bool operator==(const SetupData &other) const
-    {
-        return (step == other.step &&
-                isWaitingConfirm == other.isWaitingConfirm &&
-                targetTemp == other.targetTemp &&
-                targetHumi == other.targetHumi &&
-                turnInterval == other.turnInterval);
-    }
+    NONE = 0,
+    PRESS,
+    CLICK,
+    //    TEMP_CHANGE,
+    //   HUMI_CHANGE,
+    //    TIME_CHANGE
 };
 
-// 3. 통합 DisplayState
-struct DisplayState
+enum RelayIdx
 {
-    bool isUpdated = true;
-    SystemModes mode = SystemModes::NORMAL;
-    Species species = Species::CHICKEN; // 기본값: CHICKEN
-    uint8_t d = 0, h = 0, m = 0;
-
-    // 모드별 데이터 객체 (구분하여 선언)
-    NormalData normal;
-    SetupData setup;
-
-    void resetData()
-    {
-        d = 0;
-        h = 0;
-        m = 0;
-        normal = NormalData(); // 기본값으로 초기화
-        setup = SetupData();
-    }
-
-    // 모든 데이터를 한 번에 비교하기 위한 연산자 오버로딩 (선택 사항)
-    bool operator==(const DisplayState &other) const
-    {
-        return (isUpdated == other.isUpdated &&
-                mode == other.mode &&
-                species == other.species &&
-                d == other.d && h == other.h && m == other.m &&
-                normal == other.normal &&
-                setup == other.setup);
-    }
+    HEAT = 0,
+    FAN = 1,
+    TURN = 2,
+    COUNT
 };
+
+namespace OperateStateFlag
+{
+    using Type = uint8_t;
+
+    const Type NONE = 0;
+    const Type HEAT = 1 << 0;
+    const Type FAN = 1 << 1;
+    const Type TURN = 1 << 2;
+
+    // 수동 모드 플래그들
+    const Type M_HEAT = 1 << 3; // 히터 수동 제어 중
+    const Type M_FAN  = 1 << 4; // 팬 수동 제어 중
+    const Type M_TURN = 1 << 5; // 전란 수동 제어 중
+
+    const Type WAITING = 1 << 6;
+    const Type ALERT = 1 << 7;
+    const Type ALL = 0xFF;
+
+    inline bool hasFlag(Type source, Type target)
+    {
+        return (source & target) == target;
+    }
+}
+
+namespace UpdateFlag
+{
+    using Type = uint16_t;
+
+    const Type NONE = 0;
+    const Type STEP = 1 << 0;
+    const Type C_TEMP = 1 << 1;
+    const Type C_HUMI = 1 << 2;
+    const Type TIME = 1 << 3;
+
+    const Type R_HEAT = 1 << 4; // 히터 릴레이 상태 변경
+    const Type R_FAN = 1 << 5;  // 가습기 릴레이 상태 변경
+    const Type R_TURN = 1 << 6; // 전란 모터 릴레이 상태 변경
+    const Type SPECIES = 1 << 7;
+
+    const Type T_TEMP = 1 << 8;
+    const Type T_HUMI = 1 << 9;
+    const Type T_INTERVAL = 1 << 10;
+    const Type T_DURATION = 1 << 11;
+
+    const Type CFG_LOAD = 1 << 12;
+    const Type CFG_SAVE = 1 << 13;
+    const Type WAITING = 1 << 14; // 확인 과정
+    const Type ALERT = 1 << 15;   // 에러 발생 상태
+
+    const Type ALL = 0xFFFF; // 16비트 전체 갱신
+
+    inline bool hasFlag(Type source, Type target)
+    {
+        return (source & target) != 0;
+    }
+}
 
 struct __attribute__((packed)) SystemConfig
 {
-    uint16_t versionSignature;    // 2 bytes (예: 0xABCD)
-    uint8_t selectedSpecies;      // 1 bytes
-    float targetTemp;             // 4 bytes
-    float targetHumid;            // 4 bytes
-    uint32_t turnInterval;        // 4 bytes. 전란 주기 (초 단위)
-    uint32_t incubationStartTime; // 4 bytes. 부화 시작 시각 (Unix epoch)
-    // 총 19 바이트 (DS1302 31바이트 이내)
+    uint16_t signature;      // 0xABCE (2 bytes)
+    Species selectedSpecies; // Species enum (1 byte)
+    uint16_t targetTemp;     // (2 bytes)
+    uint16_t targetHumi;     // (2 bytes)
+    uint16_t turnInterval;   // (2 bytes)
+    uint16_t turnDuration;
+    uint32_t incubationStartTime; // (4 bytes)
+    uint8_t checksum;             // 데이터 무결성 검사 (1 byte)
+    // 총 16 바이트
 
     bool operator==(const SystemConfig &other) const
     {
-        return (versionSignature == other.versionSignature &&
+        return (signature == other.signature &&
                 selectedSpecies == other.selectedSpecies &&
                 targetTemp == other.targetTemp &&
-                targetHumid == other.targetHumid &&
+                targetHumi == other.targetHumi &&
                 turnInterval == other.turnInterval &&
                 incubationStartTime == other.incubationStartTime);
     }
@@ -248,17 +230,4 @@ struct __attribute__((packed)) SystemConfig
         return !(*this == other);
     }
 };
-
-struct __attribute__((packed)) I2CSyncData
-{
-    float currentTemp;
-    float currentHumi;
-    uint32_t currentTime; // Slave의 현재 RTC 시각
-    SystemConfig config;
-};
-
-struct __attribute__((packed)) I2CControlData
-{
-    uint8_t actuatorBits; // Bit 0: Heater, 1: Fan, 2: Motor
-    SystemConfig config;  // Updated config from Master
-};
+static_assert(sizeof(SystemConfig) <= 31, "SystemConfig is too large for DS1302 NVRAM!");

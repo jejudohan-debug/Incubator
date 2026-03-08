@@ -1,0 +1,88 @@
+void Control::checkHardwareHealth() {
+    // 히터가 켜져 있는 상태라면
+    if (heaterRelayStatus == ON) {
+        // 5분이 지났는데 온도가 시작 시점보다 안 올랐다면?
+        if (millis() - heatingStartTime > 300000 && currentTemp <= startTemp) {
+            this->handleAction(SystemAction::SYSTEM_HALT_ERROR); // 시스템 중단 및 알람
+        }
+    }
+}
+
+ALERT 상태를 해제(Clear)하는 것은 시스템의 안전과 직결되는 아주 중요한 부분입니다. 단순히 플래그만 끄는 게 아니라, **"문제가 해결되었음을 확인"**하고 **"사용자가 인지했음"**을 보장하는 절차가 필요합니다.
+
+보통 임베디드 제어 시스템에서는 다음과 같은 3가지 방식으로 ALERT를 해제합니다.
+
+1. 소프트웨어적 자동 복구 (Auto-Reset)
+에러 원인이 사라지면 자동으로 ALERT를 끄는 방식입니다. (예: 온도가 다시 정상 범위로 들어오면 알람 종료)
+
+장점: 관리가 편함.
+
+단점: 히터 단선 같은 치명적 오류는 자동으로 고쳐지지 않으므로 위험할 수 있음.
+
+C++
+// 예: 온도가 안전 범위로 돌아오면 알람 해제
+if (_view.getCurrentTemp() > _startTemp + 0.5f) {
+    _view.updateFlags &= ~UpdateFlag::ALERT; // 비트 연산으로 ALERT 플래그만 제거
+}
+2. 사용자 확인 버튼 (Manual Acknowledge) - 가장 추천
+사용자가 버튼(예: OK 버튼이나 Reset 버튼)을 눌러 "내가 에러를 확인했다"라고 알려주기 전까지는 알람을 유지하는 방식입니다.
+
+C++
+void ActionLogic::handleInput(ButtonEvent event) {
+    if (event == ButtonEvent::CLICK_OK && (_view.updateFlags & UpdateFlag::ALERT)) {
+        // 1. ALERT 플래그 제거
+        _view.updateFlags &= ~UpdateFlag::ALERT;
+        
+        // 2. 안전을 위해 제어 상태 초기화
+        _evtSSorMgr.resetStrategy(); 
+        
+        // 3. 로그 기록 혹은 화면 전환
+        Serial.println("Alert cleared by user.");
+    }
+}
+3. DisplayState에 전용 해제 함수 추가
+앞서 만든 updateValue와 비슷한 맥락으로, DisplayState에 안전하게 알람을 끄는 함수를 만듭니다.
+
+C++
+// DisplayState 클래스 내부
+void clearAlert() {
+    // 알람을 끌 때 반드시 해야 할 안전 조치들을 여기에 포함
+    this->setRelayHeat(false); // 일단 히터는 끄고 시작
+    this->setRelayFan(false);
+    
+    this->updateFlags &= ~UpdateFlag::ALERT; // 플래그 삭제
+    this->updateFlags |= UpdateFlag::ALL;   // 화면 전체 갱신 요청
+}
+💡 ALERT 발생 후 조치 가이드 (Best Practice)
+ALERT가 떴을 때 단순히 플래그만 끄는 게 아니라, 시스템을 **"안전 상태(Safe State)"**로 만드는 로직을 함께 넣어야 합니다.
+
+즉시 중단: ALERT 플래그가 서는 순간, 모든 출력(히터, 팬)을 LOW로 만드세요.
+
+원인 파악: 화면에 어떤 종류의 알람인지 표시하세요 (예: "HEATER ERROR", "SENSOR DISCONNECTED").
+
+재시작 방지: 알람이 해제되기 전까지는 tempStrategy 같은 제어 로직이 아예 동작하지 않도록 if문으로 막아야 합니다.
+
+추천하는 제어 로직 구조:
+
+C++
+void SSorControl::update() {
+    // ALERT 상태라면 제어 로직을 실행하지 않음
+    if (_view.updateFlags & UpdateFlag::ALERT) {
+        allRelaysOff(); // 모든 출력 차단
+        return; 
+    }
+
+    tempStrategy();
+    humiStrategy();
+    checkHeatHealth();
+}
+질문: 현재 하드웨어에 사용자가 누를 수 있는 물리 버튼이 있나요? 있다면 그 버튼을 3초간 길게 눌렀을 때 ALERT를 해제하는 방식이 가장 안전하고 직관적입니다. 도와드릴까요?
+
+/****-------------------------------------
+2. 하드웨어 노이즈 대책 (물리적 불안정)히터(50W)와 전란 모터가 작동할 때 시스템이 리셋되거나
+ LCD가 깨진다면, 이는 전기적 노이즈(EMI) 때문일 확률이 높습니다.
+ 스너버 회로(Snubber) 또는 다이오드: 릴레이가 꺼질 때 발생하는 역기전력이 아두이노 나노에
+  영향을 줄 수 있습니다.
+  전원 분리: 5V 충전기 전선이 220V 고전압 선과 나란히 지나가지 않게 배치하세요.
+  바이패스 커패시터: 나노 보드의 5V와 GND 핀 사이에 $10\mu F$ ~ $100\mu F$ 전해 커패시터를
+   추가하면 전원 노이즈를 줄여 시스템이 훨씬 안정됩니다.

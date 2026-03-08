@@ -1,29 +1,83 @@
 #pragma once
 #include "A_Core/Interfaces.h"
 #include "A_Core/SystemContext.h"
-#include "C_Manager/ManagerFactory.h"
+#include "C_Manager/ConfigRtcStorage.h"
 
-class NormalControl;
-class SetupControl;
+#define ACTION_CNT 7
+#define INCREASE_CNT 7
 
-class InputControl : public IControl
+class InputControl
 {
 private:
-    ButtonManager* _buttonManager;
-    NormalControl* _normalCtrl;
-    SetupControl* _setupCtrl;
+    using ActionFunc = void (InputControl::*)();
+    using IncreaseFunc = void (InputControl::*)();
+    using DecreaseFunc = void (InputControl::*)();
+    static const ActionFunc _actionMap[];
+    static const IncreaseFunc _increaseMap[];
+    static const DecreaseFunc _decreaseMap[];
 
-    DisplayState &_view = SystemContext::getView();
-    SystemConfig &_config = SystemContext::getConfig();
-    EventQueue &_queue = SystemContext::getQueue();
+    ConfigRtcStorage &_cfgRtcStor;
+
+    DisplayState &_view = SystemContext::getInstance().getView();
 
 public:
-    InputControl();
+    InputControl(ConfigRtcStorage &cfgRtcStr)
+        : _cfgRtcStor(cfgRtcStr) {}
 
-    void init() override;
-    void update() override;
-    void handleAction(SystemAction action) override;
+    void handleAction(SystemAction action);
 
-    DisplayState &getView() { return _view; }
-    SystemConfig &getConfig() { return _config; }
+private:
+    void moveToNextStep();
+    // void waitConfirm();
+    void saveYes();
+    void saveNo();
+
+    void increaseValue();
+    void decreaseValue();
+
+    void startHeat();
+    void stopHeat();
+    void startFan();
+    void stopFan();
+    void startTurn();
+    void stopTurn();
+
+    // Species
+    void updateSelectedSpecies(Species newSpecies);
+    void increaseSpecies();
+    void decreaseSpecies();
+
+    // 날짜
+    void modifyStartTime(uint32_t seconds, bool bPlus);
+    void increaseDay();
+    void increaseHour();
+    void increaseMinute();
+
+    void decreaseDay();
+    void decreaseHour();
+    void decreaseMinute();
+
+    void increaseTemperature();
+    void increaseHumidity();
+    void increaseTurnInterval();
+    void increaseTurnDuration();
+
+    void decreaseTemperature();
+    void decreaseHumidity();
+    void decreaseTurnInterval();
+    void decreaseTurnDuration();
 };
+
+// Relay On/Off
+// void updateActionState(ActionStateFlag::Type flag,
+//                      bool enable, ActionStateFlag::Type uFlag);
+
+// 온도, 습도, 전란 주기
+/*template <typename T>
+void updateConfigValue(
+    void (DisplayState::*setter)(T),
+    T newValue, UpdateFlag::Type flag)
+{
+    (_view.*setter)(newValue);
+    _view.updateFlags |= flag;
+}*/

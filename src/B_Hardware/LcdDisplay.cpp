@@ -1,6 +1,6 @@
 #include "LcdDisplay.h"
 
-void LcdDisplay::clear() { _lcd.clear(); }
+// void LcdDisplay::clear() { _lcd.clear(); }
 
 void LcdDisplay::init()
 {
@@ -9,6 +9,8 @@ void LcdDisplay::init()
     _lcd.init();
     _lcd.backlight();
     setupCustomChars();
+
+    _view.updateFlags = UpdateFlag::ALL;
 }
 
 void LcdDisplay::setupCustomChars()
@@ -32,12 +34,47 @@ void LcdDisplay::setupCustomChars()
 
 void LcdDisplay::update()
 {
-    Serial.flush();
-    if (_view.mode == SystemModes::NORMAL)
+    if (_view.getAlert())
     {
-        _currentDisplay = &_normalDisplay;
-    } else {
-        _currentDisplay = &_setupDisplay;
+        blinkBacklight();
+        return;
     }
-    _currentDisplay->update();
+
+    //if (!_view.updateFlags)
+    //    return;
+
+    if (UpdateFlag::hasFlag(_view.updateFlags, UpdateFlag::STEP))
+    {
+        _lcd.clear();
+    }
+
+    if ((_view.getPageStep() == PageStep::ENV) || (_view.getPageStep() == PageStep::CONFIG))
+    {
+        _normalDisplay.update();
+    }
+    else
+    {
+        _setupDisplay.update();
+    }
+}
+
+void LcdDisplay::blinkBacklight()
+{
+    static uint32_t lastBlinkTime = 0;
+    static bool lightOn = true;
+
+    if (millis() - lastBlinkTime >= 500)
+    {
+        lastBlinkTime = millis();
+        lightOn = !lightOn;
+
+        if (lightOn)
+        {
+            _lcd.backlight();
+        }
+        else
+        {
+            _lcd.noBacklight();
+        }
+    }
 }

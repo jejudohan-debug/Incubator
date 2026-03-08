@@ -16,10 +16,8 @@ public:
     HardwareFactory(const HardwareFactory &) = delete;
     HardwareFactory &operator=(const HardwareFactory &) = delete;
 
-    static HardwareFactory &getInstance();
-    LcdDisplay &getDisplay();
-    DHTSensor &getDHT();
-    RTCDevice &getRTC();
-    Button::Group<3> &getButtons();
-    RelayActuator::Group<3> &GetRelays();
+    static LcdDisplay &getLcdDisplay();
+    static Button *getButtons();
+    static DHTSensor &getDHTSensor();
+    static RTCDevice &getRTCDevice();
 };

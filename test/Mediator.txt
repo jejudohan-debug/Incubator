@@ -1,0 +1,28 @@
+// --- Mediator.h ---
+class Device; // 전방 선언: "Device라는 클래스가 있다는 것만 알아둬"
+
+class Mediator {
+    Device* _device; // 포인터는 크기가 고정되어 있어 전방 선언만으로 가능
+public:
+    void setDevice(Device* d);
+    void onEvent(Device* d);
+};
+
+// --- Device.h ---
+#include "Mediator.h" // Device는 Mediator의 함수를 직접 호출해야 하므로 include
+
+class Device {
+    Mediator* _mediator;
+public:
+    Device(Mediator* m) : _mediator(m) {}
+    void click() { _mediator->onEvent(this); }
+};
+
+// 1. 각각 독립적으로 생성
+Mediator mediator;
+Device device;
+
+// 2. 외부(main.ino 등)에서 수동으로 연결
+device.setMediator(&mediator);
+mediator.registerDevice(&device);
+

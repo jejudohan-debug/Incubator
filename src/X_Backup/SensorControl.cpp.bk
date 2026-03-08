@@ -1,0 +1,52 @@
+#include "SensorControl.h"
+
+SensorControl::SensorControl() {}
+
+void SensorControl::init()
+{
+    _dhtSensor.init();
+}
+
+void SensorControl::update()
+{
+    _dhtSensor.update();
+
+    float temp = _dhtSensor.getTemp();
+    float humi = _dhtSensor.getHumi();
+
+    if (_view.normal.currentTemp != temp)
+    {
+        _view.normal.currentTemp = temp;
+        _view.isUpdated = true;
+        _queue.push(SystemAction::TEMP_CHANGE);
+    }
+    if (_view.normal.currentHumi != humi)
+    {
+        _view.normal.currentHumi = humi;
+        _view.isUpdated = true;
+        _queue.push(SystemAction::HUMI_CHANGE);
+    }
+}
+
+void SensorControl::handleAction(SystemAction action)
+{
+    switch (action)
+    {
+    case SystemAction::TEMP_CHANGE:
+        tempStrategy();
+        break;
+    case SystemAction::HUMI_CHANGE:
+        humiStrategy();
+        break;
+    default:
+        break;
+    }
+}
+
+void SensorControl::tempStrategy()
+{
+}
+
+void SensorControl::humiStrategy()
+{
+}

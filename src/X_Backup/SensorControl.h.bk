@@ -1,11 +1,13 @@
 #pragma once
 #include "A_Core/SystemContext.h"
-#include "C_Manager/SensorManager.h"
+#include "B_Hardware/HardwareFactory.h"
 
 class SensorControl : public IControl
 {
 private:
-    SensorManager _sensor;
+     DHTSensor& _dhtSensor = HardwareFactory::getDHTSensor();
+
+    //SensorManager _sensorManager;
 
     DisplayState &_view = SystemContext::getView();
     SystemConfig &_config = SystemContext::getConfig();

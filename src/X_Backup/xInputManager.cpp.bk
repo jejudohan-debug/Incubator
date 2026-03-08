@@ -1,69 +1,99 @@
-#include "ButtonManager.h"
 #include <Arduino.h>
+#include "InputManager.h"
 
-// 하드웨어 초기화 (setup에서 호출)
-void ButtonManager::init()
+void InputManager::init()
 {
-    for (int i = 0; i < static_cast<int>(BtnIdx::COUNT); i++)
-    {
-        _btns[i].init();
-    }
+    _btnManager.init();
+    _ssorManager.init();
+    _rtcManager.init();
 }
 
-// 매 루프마다 호출
-void ButtonManager::update()
+void InputManager::update()
 {
-    for (int i = 0; i < static_cast<int>(BtnIdx::COUNT); i++)
-    {
-        _btns[i].update();
-
-        ButtonEvent evt = _btns[i].pullEvent();
-        if (evt != ButtonEvent::NONE)
-        {
-            handleEvent(static_cast<BtnIdx>(i), evt);
-        }
-    }
+    _btnManager.update();
+    _ssorManager.update();
+    _rtcManager.update();
 }
 
-void ButtonManager::handleEvent(BtnIdx idx, ButtonEvent evt)
+void InputManager::onNotify(EventFlag::Type flag, const float value)
 {
-    if (evt == ButtonEvent::NONE)
+    _ssorManager.handleEvent(flag, value);
+}
+
+void InputManager::onNotify(EventFlag::Type flag, const uint32_t value)
+{
+    _ssorManager.handleEvent(flag, value);
+}
+
+void InputManager::onNotify(EventFlag::Type flag, const SystemConfig &value)
+{
+}
+
+/*    Serial.print(F("InputEvent: Btn="));
+    Serial.print((int)flag);
+    Serial.print(F(" Evt="));
+    Serial.println((int)value);*/
+
+/*while (!_eventQueue.isEmpty())
+{
+    EventStruct ev;
+    if (!_eventQueue.pop(ev))
+        continue;
+
+    switch (ev.idx) {
+        // --- 1. 입력 버튼 그룹 ---
+        case DeviceIdx::SELECT:
+        case DeviceIdx::UP:
+        case DeviceIdx::DOWN:
+        case DeviceIdx::ENTER:
+            // 버튼 입력 처리 로직 (예: 메뉴 이동, 값 증감)
+            handleButtonEvent(ev);
+            break;
+
+        // --- 2. 센서 그룹 ---
+        case DeviceIdx::DHT:
+        case DeviceIdx::RTC:
+            // 센서 데이터 읽기 로직
+            //readSensorData(idx);
+            break;
+        default:
+            // COUNT나 정의되지 않은 값 예외 처리
+            break;
+    }
+}*/
+
+/*void InputManager::handleButtonEvent(const EventStruct &ev)
+{
+    if (ev.event == DeviceEvent::NONE)
         return;
 
-    Serial.print("InputEvent: Btn=");
-    Serial.print((int)idx);
-    Serial.print(" Evt=");
-    Serial.println((int)evt);
+    Serial.print(F("InputEvent: Btn="));
+    Serial.print((int)ev.idx);
+    Serial.print(F(" Evt="));
+    Serial.println((int)ev.event);
 
-    switch (_view.mode)
+    if (_view.step == PageStep::ENV)
     {
-    case SystemModes::NORMAL:
-        handleNormalMode(idx, evt);
-        break;
-    case SystemModes::SETUP:
-        handleSetupMode(idx, evt);
-        break;
-    default:
-        break;
+        handleNormalEvent(ev);
     }
 }
 // Normal 모드용 함수 포인터 테이블 정의
-const ButtonManager::NormalEventFunc ButtonManager::_normalFuncTable[] = {
-    &ButtonManager::normal_SELECT,
-    &ButtonManager::normal_UP,
-    &ButtonManager::normal_DOWN,
-    &ButtonManager::normal_ENTER,
+const InputManager::NormalEventFunc InputManager::_normalFuncTable[] = {
+    &InputManager::normal_SELECT,
+    &InputManager::normal_UP,
+    &InputManager::normal_DOWN,
+    &InputManager::normal_ENTER,
 };
 
 // Setup 모드용 함수 포인터 테이블 정의
-const ButtonManager::SetupEventFunc ButtonManager::_setupFuncTable[] = {
-    &ButtonManager::setup_SELECT,
-    &ButtonManager::setup_UP,
-    &ButtonManager::setup_DOWN,
-    &ButtonManager::setup_ENTER,
+const InputManager::SetupEventFunc InputManager::_setupFuncTable[] = {
+    &InputManager::setup_SELECT,
+    &InputManager::setup_UP,
+    &InputManager::setup_DOWN,
+    &InputManager::setup_ENTER,
 };
 
-void ButtonManager::handleNormalMode(BtnIdx idx, ButtonEvent evt)
+void InputManager::handleNormalEvent(const EventStruct &ev)
 {
     int i = static_cast<int>(idx);
     if (i < 0 || i >= static_cast<int>(BtnIdx::COUNT))
@@ -168,3 +198,4 @@ void ButtonManager::setup_ENTER(ButtonEvent evt)
 }
 
 void ButtonManager::setup_NOP(ButtonEvent evt) { (void)evt; }
+*/

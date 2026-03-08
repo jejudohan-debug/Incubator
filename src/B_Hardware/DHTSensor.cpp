@@ -4,40 +4,64 @@
 void DHTSensor::init()
 {
     _dht.begin();
-    delay(2000); // Wait for sensor to stabilize
-    update();
-    /*if (isnan(_lastTemp) || _lastTemp == -99.0f) {
-        Serial.println("DHT22: WARNING! First read failed (NaN). Check Wiring.");
-    } else if (_lastTemp == 0.0f && _lastHumi == 0.0f) {
-        Serial.println("DHT22: WARNING! Read 0.0/0.0. This is suspicious. Check Data Pin.");
-    } else {
-        Serial.print("DHT22: First read OK. T="); Serial.print(_lastTemp);
-        Serial.print(", H="); Serial.println(_lastHumi);
-    }*/
+
+    _lastTemp = NAN;
+    _lastHumi = NAN;
+    _lastReadTime = millis();
+
+    Serial.println(F("DHT22: Initialized. Waiting 2s for stabilization..."));
 }
 
 void DHTSensor::update()
 {
     unsigned long current = millis();
-    if (current - _lastReadTime >= READ_INTERVAL || _lastReadTime == 0)
-    {
-        _lastReadTime = current; // Update interval even if read fails to prevent spamming
-        float t = _dht.readTemperature();
-        float h = _dht.readHumidity();
-
-        if (isnan(t) || isnan(h))
-        {
-            Serial.print(F("DHT22 Error: Read failed (NaN)! Time="));
-            Serial.println(current);
-        }
-        else
-        {
-            _lastTemp = t;
-            _lastHumi = h;
-            if (t == 0.0f && h == 0.0f)
-            {
-                Serial.println(F("DHT22 Warning: Got EXACT 0.00/0.00."));
-            }
-        }
+    if (_lastReadTime != 0 && (current - _lastReadTime < READ_INTERVAL)) {
+        return;
     }
+
+    float t = _dht.readTemperature();
+    float h = _dht.readHumidity();
+
+    _lastReadTime = current;
+
+    /*Serial.print(F("DHT Temperature : "));
+    Serial.print(t);
+    Serial.print(F(", DHT Humidity : "));
+    Serial.println(h);*/
+
+    if (isnan(t) || isnan(h))
+    {
+        _errorCount++;
+        Serial.print(F("DHT22 Error: Read failed (NaN)! Time="));
+        Serial.println(current);
+
+        if (_errorCount >= 5) {
+            Serial.println(F("Attempting to reset DHT sensor..."));
+            _dht.begin();
+            _errorCount = 0; // 카운트 초기화
+        }
+        return;
+    }
+
+    if (t == 0.0f && h == 0.0f)
+    {
+        Serial.println(F("DHT22 Warning: Got EXACT 0.00/0.00."));
+    }
+
+    updateAndNotify(EventFlag::DHT_TEMP, _lastTemp, t);
+    updateAndNotify(EventFlag::DHT_HUMI, _lastHumi, h);
+}
+
+void DHTSensor::updateAndNotify(EventFlag::Type flag, float &lastValue, float newValue)
+{
+    if (abs(lastValue - newValue) >= 0.1f)
+    {
+        lastValue = newValue;
+        notify(flag, newValue);
+    }
+}
+
+bool DHTSensor::isValid() const
+{
+    return !(isnan(_lastTemp) || isnan(_lastHumi));
 }

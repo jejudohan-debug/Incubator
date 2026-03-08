@@ -1,0 +1,93 @@
+#include <DHT.h>
+#include <PID_v1.h>
+
+// 핀 설정
+#define DHTPIN 2
+#define SSR_PIN 3 // PWM이 가능한 핀 권장 (3, 5, 6, 9, 10, 11)
+#define DHTTYPE DHT22
+
+DHT dht(DHTPIN, DHTTYPE);
+PID_SSR_Actuator heater(SSR_PIN, false);
+
+// PID 변수
+double Setpoint = 37.5; // 부화기 목표 온도
+double Input, Output;
+// 초기 게인 값 (튜닝이 필요합니다)
+double Kp = 20, Ki = 0.5, Kd = 2; 
+
+PID myPID(&Input, &Output, &Setpoint, Kp, Ki, Kd, DIRECT);
+
+void setup() {
+    Serial.begin(9600);
+    dht.begin();
+    heater.init();
+
+    myPID.SetMode(AUTOMATIC);
+    myPID.SetOutputLimits(0, 255); // analogWrite 범위에 맞춤
+}
+
+void loop() {
+    // 1. 온도 읽기
+    float temp = dht.readTemperature();
+    
+    if (!isnan(temp)) {
+        Input = (double)temp;
+        
+        // 2. PID 계산
+        if (myPID.Compute())
+        
+            // 3. SSR 출력 업데이트
+            heater.setOutput(Output);
+            heater.update();
+        
+            // 모니터링
+            Serial.print("Temp: "); Serial.print(Input);
+            Serial.print(" | PID Out: "); Serial.println(Output);
+    }
+    
+    delay(2000); // DHT22는 읽기 간격이 2초 정도 필요합니다.
+}
+
+//--Kp, Ki, Kd 값을 출력
+// ... (기존 설정 코드 생략) ...
+
+void loop() {
+    unsigned long currentTime = millis();
+
+    if (currentTime - lastReadTime >= READ_INTERVAL) {
+        lastReadTime = currentTime;
+
+        float temp = dht.readTemperature();
+        if (!isnan(temp)) {
+            Input = (double)temp;
+            
+            // PID 계산 전 이전 오차 저장 (D항 계산용)
+            static double lastError = 0;
+            double error = Setpoint - Input;
+            
+            if (myPID.Compute()) {
+                // 1. P항: 현재 오차에 비례한 힘
+                double pTerm = Kp * error;
+
+                // 2. I항: 누적된 오차의 힘 (라이브러리 내부 ITerm을 유추)
+                // 실제 라이브러리 내부의 정확한 ITerm은 출력값에서 P와 D를 뺀 값입니다.
+                // d항을 대략 계산 (실제 라이브러리는 내부적으로 시간 변화량을 고려함)
+                double dTerm = Kd * (error - lastError); 
+                double iTerm = Output - pTerm - dTerm; 
+
+                // 3. 시리얼 플로터나 모니터로 확인
+                Serial.print("Temp:"); Serial.print(Input);
+                Serial.print(",SP:"); Serial.print(Setpoint);
+                Serial.print(",Output:"); Serial.print(Output);
+                Serial.print(",P_Term:"); Serial.print(pTerm);
+                Serial.print(",I_Term:"); Serial.print(iTerm); // <- 이게 궁금하신 누적값의 영향력입니다.
+                Serial.print(",D_Term:"); Serial.println(dTerm);
+
+                lastError = error;
+                
+                heater.setOutput(Output);
+                heater.update();
+            }
+        }
+    }
+}

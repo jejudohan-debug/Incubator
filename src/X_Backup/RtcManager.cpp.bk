@@ -1,0 +1,30 @@
+#include "RtcManager.h"
+
+void RtcManager::init() {
+        _rtc.init();
+    }
+
+void RtcManager::update() {
+    uint32_t unixTime = getCurrentTime();
+
+    if (_lastUnixTime < unixTime) {
+        _view.m = unixTime % 60;
+        _view.h = (unixTime / 60) % 60;
+        _view.d = (unixTime / 3600) % 24;
+        _view.isUpdated = true;
+        _queue.push(SystemAction::TIME_CHANGE);
+        _lastUnixTime = unixTime;
+    }
+}
+
+    uint32_t RtcManager::getCurrentTime() {
+        return _rtc.getUnixTime();
+    }
+
+    void RtcManager::setCurrentTime(uint32_t unixTime) {
+        _rtc.setTime(unixTime);
+    }
+
+    bool RtcManager::saveConfig(const SystemConfig& config) {
+        return _rtc.saveConfig(config);
+    }

@@ -1,29 +1,43 @@
 #include "HardwareFactory.h"
 
-LcdDisplay &HardwareFactory::getLcdDisplay()
+HardwareFactory &HardwareFactory::getInstance()
 {
-    static LcdDisplay instance;
+    static HardwareFactory instance;
     return instance;
 }
 
-Button *HardwareFactory::getButtons()
+LcdDisplay &HardwareFactory::getDisplay()
 {
-    static Button btns[4] = {
-        Button(Pins::BTN_SELECT),
-        Button(Pins::BTN_UP),
-        Button(Pins::BTN_DOWN),
-        Button(Pins::BTN_ENTER)};
-    return btns;
+    static LcdDisplay display;
+    return display;
 }
 
-DHTSensor &HardwareFactory::getDHTSensor()
+DHTSensor &HardwareFactory::getDHT()
 {
     static DHTSensor instance(Pins::DHT);
     return instance;
 }
 
-RTCDevice &HardwareFactory::getRTCDevice()
+RTCDevice &HardwareFactory::getRTC()
 {
-    static RTCDevice instance(Pins::RTC_DAT, Pins::RTC_CLK, Pins::RTC_RST);
-    return instance;
+    static RTCDevice rtc(Pins::RTC_DAT, Pins::RTC_CLK, Pins::RTC_RST);
+    return rtc;
+}
+
+Button::Group<3> &HardwareFactory::getButtons()
+{
+    static Button::Group<3> btns =
+        {{Button(Pins::BTN_SELECT, EventFlag::BTN_SELECT),
+          Button(Pins::BTN_UP, EventFlag::BTN_UP),
+          Button(Pins::BTN_DOWN, EventFlag::BTN_DOWN)}};
+    return btns;
+}
+
+RelayActuator::Group<3> &HardwareFactory::GetRelays()
+{
+    static RelayActuator::Group<3> relays =
+        {{RelayActuator(Pins::HEATER),
+          RelayActuator(Pins::FAN),
+          RelayActuator(Pins::MOTOR)}};
+    return relays;
 }
