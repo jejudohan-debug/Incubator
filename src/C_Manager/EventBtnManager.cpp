@@ -108,3 +108,12 @@ void EventBtnManager::handleBtnDown(const ButtonEvent evt)
         break;
     }
 }
+
+void EventBtnManager::handleLimitSw(const ButtonEvent evt)
+{
+
+    if (evt == ButtonEvent::PRESS)
+    {
+        _actionQueue.push(SystemAction::LIMIT_SW);
+    }
+}

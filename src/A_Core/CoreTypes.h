@@ -54,6 +54,7 @@ enum class SystemAction : uint8_t
     SENSOR_LAST = HUMI_CHANGE,
     // --- RTC ---
     TIME_CHANGE,
+    LIMIT_SW,
     CFG_LOAD,
     CFG_SAVE,
     // ----------
@@ -100,6 +101,7 @@ struct SpeciesProfile
     float getHatchHumi() const { return hatchHumi / 10.0f; }
 };
 
+#define BUTTON_CNT 4
 namespace EventFlag
 {
     using Type = uint16_t;
@@ -108,15 +110,16 @@ namespace EventFlag
     const Type BTN_SELECT = 1 << 0;
     const Type BTN_UP = 1 << 1;
     const Type BTN_DOWN = 1 << 2;
-    const Type DHT_TEMP = 1 << 3;
-    const Type DHT_HUMI = 1 << 4;
-    const Type RTC_TIME = 1 << 5;
-    const Type RTC_LOAD = 1 << 6;
-    const Type RTC_SAVE = 1 << 7;
+    const Type LIMIT_SW= 1 << 3;
+    const Type DHT_TEMP = 1 << 4;
+    const Type DHT_HUMI = 1 << 5;
+    const Type RTC_TIME = 1 << 6;
+    const Type RTC_LOAD = 1 << 7;
 
-    const Type RELAY_ON_DONE = 1 << 8;
-    const Type RELAY_OFF_DONE = 1 << 9;
-    const Type RELAY_ERROR = 1 << 10;
+    const Type RTC_SAVE = 1 << 8;
+    const Type RELAY_ON_DONE = 1 << 9;
+    const Type RELAY_OFF_DONE = 1 << 10;
+    const Type RELAY_ERROR = 1 << 11;
     const Type ALL = 0xFF;
 
     inline bool hasFlag(Type source, Type target)

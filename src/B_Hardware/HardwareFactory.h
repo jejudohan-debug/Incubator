@@ -20,6 +20,6 @@ public:
     LcdDisplay &getDisplay();
     DHTSensor &getDHT();
     RTCDevice &getRTC();
-    Button::Group<3> &getButtons();
+    Button::Group<BUTTON_CNT> &getButtons();
     RelayActuator::Group<3> &GetRelays();
 };

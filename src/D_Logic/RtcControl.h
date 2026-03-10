@@ -8,6 +8,8 @@ private:
     DisplayState &_view = SystemContext::getInstance().getView();
     ActionQueue &_queue = SystemContext::getInstance().getActionQueue();
 
+    bool _isLimitReached = true;
+
 public:
     RtcControl() {}
 

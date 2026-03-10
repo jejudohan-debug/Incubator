@@ -4,12 +4,10 @@
 #include "B_Hardware/HardwarePins.h"
 #include "B_Hardware/Button.h"
 
-#define BUTTON_CNT 3
-
 class EventBtnManager : public IManager
 {
 private:
-    Button::Group<3> &_btns;
+    Button::Group<BUTTON_CNT> &_btns;
 
     DisplayState &_view = SystemContext::getInstance().getView();
     ActionQueue &_actionQueue = SystemContext::getInstance().getActionQueue();
@@ -17,9 +15,10 @@ private:
     void handleBtnSelect(const ButtonEvent evt);
     void handleBtnUp(const ButtonEvent evt);
     void handleBtnDown(const ButtonEvent evt);
+    void handleLimitSw(const ButtonEvent evt);
 
 public:
-    EventBtnManager(Button::Group<3> &btns)
+    EventBtnManager(Button::Group<BUTTON_CNT> &btns)
         : _btns(btns) {}
     void init() override;
     void update() override;
