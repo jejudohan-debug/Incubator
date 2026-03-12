@@ -49,7 +49,7 @@ void RTCDevice::setTime(uint32_t timestamp)
     _rtc.SetDateTime(RtcDateTime(timestamp));
 }
 
-void RTCDevice::saveConfig(const SystemConfig &config)
+/*void RTCDevice::saveConfig(const SystemConfig &config)
 {
     // 구조체를 바이트 배열로 캐스팅하여 저장
     const uint8_t *data = reinterpret_cast<const uint8_t *>(&config);
@@ -70,4 +70,4 @@ void RTCDevice::loadConfig(SystemConfig &config)
         data[i] = _rtc.GetMemory(i);
     }
     notify(EventFlag::RTC_LOAD, config);
-}
+}*/

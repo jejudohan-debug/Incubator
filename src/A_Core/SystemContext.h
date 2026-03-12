@@ -4,6 +4,7 @@
 #include "ActionQueue.h"
 #include "SpeciesContext.h"
 #include "DisplayState.h"
+#include "OperateState.h"
 
 class SystemContext
 {
@@ -18,6 +19,7 @@ public:
     static SystemContext &getInstance();
     //LiquidCrystal_I2C &getLcd();
     DisplayState &getView();
+    OperateState &getOperate();
     ActionQueue &getActionQueue();
     // SystemConfig &getConfig();
     SpeciesContext &getSpeciesContext();

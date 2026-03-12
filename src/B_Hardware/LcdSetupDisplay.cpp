@@ -52,7 +52,7 @@ void LcdSetupDisplay::update()
     uint8_t stepIdx = _view.getPageStep() - PageStep::SETUP_FIRST;
 
     // 확인 대기 상태이면 renderConfirm() 호출
-    if (_view.getWaiting())
+    if (_operate.getWaiting())
     {
         renderConfirmTitle(stepIdx);
         renderSetupValue(stepIdx);

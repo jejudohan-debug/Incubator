@@ -6,6 +6,8 @@
 #include "DHTSensor.h"
 #include "RTCDevice.h"
 #include "RelayActuator.h"
+// #include "EEPROMDevice.h"
+//  #include "PID_SSR_Actuator.h"
 
 class HardwareFactory
 {
@@ -20,6 +22,8 @@ public:
     LcdDisplay &getDisplay();
     DHTSensor &getDHT();
     RTCDevice &getRTC();
+    // EEPROMDevice &getEEPROM();
+    //  PID_SSR_Actuator &getSSR();
     Button::Group<BUTTON_CNT> &getButtons();
-    RelayActuator::Group<3> &GetRelays();
+    RelayActuator::Group<RELAY_CNT> &GetRelays();
 };

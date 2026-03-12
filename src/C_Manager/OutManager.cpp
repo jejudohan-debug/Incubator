@@ -17,9 +17,9 @@ void OutputManager::update()
 {
     for (const auto &map : _relayMaps)
     {
-        if (UpdateFlag::hasFlag(_view.updateFlags, map.flag))
+        if (UpdateFlag::hasFlag(_view.updateFlags, UpdateFlag::RELAY_STATE))
         {
-            bool isOn = (_view.*(map.getter))();
+            bool isOn = (_operate.*(map.getter))();
 
             isOn ? _relays[map.index].run() : _relays[map.index].stop();
         }

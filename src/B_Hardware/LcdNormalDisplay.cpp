@@ -4,7 +4,7 @@
 const uint8_t BAR_BLOCK_COUNT = 6;
 const uint8_t PIXELS_PER_BLOCK = 5;
 const uint8_t BAR_START_COL = 9;
-const uint8_t TOTAL_DAYS = 21;
+//const uint8_t TOTAL_DAYS = 21;
 
 void LcdNormalDisplay::printFormatInt(const __FlashStringHelper *label, int value)
 {
@@ -91,9 +91,9 @@ void LcdNormalDisplay::renderEnv()
 void LcdNormalDisplay::renderRelay()
 {  
     _lcd.setCursor(13, 0);
-    _lcd.write(_view.getRelayHeat() ? 'H' : ' ');
-    _lcd.write(_view.getRelayFan() ? 'F' : ' ');
-    _lcd.write(_view.getRelayTurn() ? 'T' : ' ');
+    _lcd.write(_operate.getRelayHeat() ? 'H' : ' ');
+    _lcd.write(_operate.getRelayFan() ? 'F' : ' ');
+    _lcd.write(_operate.getRelayTurn() ? 'T' : ' ');
 }
 
 void LcdNormalDisplay::renderTime()
@@ -113,11 +113,15 @@ void LcdNormalDisplay::animateProgressBsr()
     static uint8_t _targetPixels = 0;
     const unsigned long ANIM_INTERVAL = 500; // 0.5초마다 애니메이션 업데이트
 
+    auto& speciesCtx = SystemContext::getInstance().getSpeciesContext();
+    Species currentSpecies = _view.getSpecies();
+    uint8_t totalDays = speciesCtx.getTotalDays(currentSpecies);
+
     if ((millis() - _lastAnimTime) < ANIM_INTERVAL)
         return;
 
     _lastAnimTime = millis();
-    _targetPixels = (_view.getElapsedDay() * BAR_BLOCK_COUNT * PIXELS_PER_BLOCK) / TOTAL_DAYS;
+    _targetPixels = (_view.getElapsedDay() * BAR_BLOCK_COUNT * PIXELS_PER_BLOCK) / totalDays;
     if (_targetPixels <= 0)
         _targetPixels = 1;
 

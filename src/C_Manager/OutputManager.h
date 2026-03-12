@@ -14,15 +14,15 @@ private:
     struct RelayMap
     {
         RelayIdx index;
-        UpdateFlag::Type flag;
-        bool (DisplayState::*getter)() const;
+        bool (OperateState::*getter)() const;
     };
-    const RelayMap _relayMaps[3] = {
-        {HEAT, UpdateFlag::R_HEAT, &DisplayState::getRelayHeat},
-        {FAN, UpdateFlag::R_FAN, &DisplayState::getRelayFan},
-        {TURN, UpdateFlag::R_TURN, &DisplayState::getRelayTurn}};
+    const RelayMap _relayMaps[RELAY_CNT] = {
+        {HEAT, &OperateState::getRelayHeat},
+        {FAN, &OperateState::getRelayFan},
+        {TURN, &OperateState::getRelayTurn}};
 
     DisplayState &_view = SystemContext::getInstance().getView();
+    OperateState &_operate = SystemContext::getInstance().getOperate();
 
 public:
     OutputManager(RelayActuator::Group<3> &relays)

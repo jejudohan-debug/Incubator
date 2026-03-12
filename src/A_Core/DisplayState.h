@@ -17,10 +17,7 @@ private:
     uint32_t _currentUnixTime = 0; // 초 단위
     uint32_t _startUnixTime = 0;   // 초 단위
     uint8_t _d = 0, _h = 0, _m = 0;
-    OperateStateFlag::Type _operateStateFlag = OperateStateFlag::NONE;
-
-    void setOperateFlag(OperateStateFlag::Type oFlag, bool enable, UpdateFlag::Type uFlag);
-    void setOperateFlag(OperateStateFlag::Type oFlag, bool enable);
+    // int16_t kp = 200, ki = 5, kd = 20;
 
     template <typename T>
     void updateField(T &field, T newValue, UpdateFlag::Type flag);
@@ -82,29 +79,12 @@ public:
     void setPageStep(PageStep val);
     PageStep getPageStep() const;
 
-    void setRelayHeat(bool val);
-    bool getRelayHeat() const;
-    void setRelayFan(bool val);
-    bool getRelayFan() const;
-    void setRelayTurn(bool val);
-    bool getRelayTurn() const;
-    void setWaiting(bool val);
-    bool getWaiting() const;
-    void setAlert(bool val);
-    bool getAlert() const;
-
-    void setManualHeat(bool val);
-    bool getManualHeat() const;
-    void setManualFan(bool val);
-    bool getManualFan() const;
-    void setManualTurn(bool val);
-    bool getManualTurn() const;
-
     void setSpecies(Species s);
     Species getSpecies() const;
     // void importConfigValue(const SystemConfig &cfg);
 
     void setCurrentUnixTime(uint32_t val);
+    uint32_t getCurrentUnixTime();
     void setStartUnixTime(uint32_t t);
     uint32_t getStartUnixTime() const;
     uint32_t getElapsedUnixTime() const;
@@ -114,6 +94,9 @@ public:
     uint8_t getElapsedHour() const;
     uint8_t getElapsedMinute() const;
 
+    void updateRelayFlag();
+    bool getRelayFlag();
+    
     /*template <typename SetterFunc>
     void InputControl::updateActionState(
         SetterFunc setter, bool enable, ActionStateFlag::Type uFlag)

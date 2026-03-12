@@ -85,9 +85,9 @@ void InputControl::decreaseValue()
 void InputControl::moveToNextStep()
 {
     // 값이 변경되었으면 확인 화면 표시
-    if (_cfgRtcStor.isViewChanged())
+    if (_cfgEEPROM.isViewChanged())
     {
-        _view.setWaiting(true);
+        _operate.setWaiting(true);
         return;
     }
 
@@ -97,70 +97,72 @@ void InputControl::moveToNextStep()
         next = 0;
 
     _view.setPageStep(static_cast<PageStep>(next));
-    _view.updateFlags |= UpdateFlag::STEP;
+    //_view.updateFlags |= UpdateFlag::STEP;
 }
 
 // SAVE_YES,   // 저장 확인: 예
 void InputControl::saveYes()
 {
-    if (_cfgRtcStor.getSpecies() != _view.getSpecies())
+    if (_cfgEEPROM.getSpecies() != _view.getSpecies())
     {
-        _cfgRtcStor.resetSpeciesConfig(_view.getSpecies());
+        _cfgEEPROM.resetSpeciesConfig(_view.getSpecies());
     }
     else
     {
-        _cfgRtcStor.importViewConfigValue();
+        _cfgEEPROM.importViewConfigValue();
     }
-    _view.setWaiting(false);
+    _operate.setWaiting(false);
     moveToNextStep();
 }
 
 // SAVE_NO,    // 저장 확인: 아니오
 void InputControl::saveNo()
 {
-    _view.setWaiting(false);
+    _cfgEEPROM.exportViewConfigValue();
+
+    _operate.setWaiting(false);
     moveToNextStep();
 }
 
 void InputControl::startHeat()
 {
-    _view.setManualHeat(true);
-    _view.setRelayHeat(true);
+    _operate.setManualHeat(true);
+    _view.updateRelayFlag();
 }
 
 // HEATER_STOP,  // 모터 수동 정지
 void InputControl::stopHeat()
 {
-    _view.setRelayHeat(false);
-    _view.setManualHeat(false);
+    _operate.setManualHeat(false);
+    _view.updateRelayFlag();
 }
 
 // FAN_START,
 void InputControl::startFan()
 {
-    _view.setManualFan(true);
-    _view.setRelayFan(true);
+    _operate.setManualFan(true);
+    _view.updateRelayFlag();
 }
 
 // FAN_STOP,
 void InputControl::stopFan()
 {
-    _view.setRelayFan(false);
-    _view.setManualFan(false);
+    _operate.setManualFan(false);
+    _view.updateRelayFlag();
 }
 
 // TURN_START,
 void InputControl::startTurn()
 {
-    _view.setManualTurn(true);
-    _view.setRelayTurn(true);
+    _operate.setManualTurn(true);
+    _view.updateRelayFlag();
 }
 
 // TURN_STOP,
 void InputControl::stopTurn()
 {
-    _view.setRelayTurn(false);
-    _view.setManualTurn(false);
+    _operate.setManualTurn(false);
+    _view.updateRelayFlag();
 }
 
 // SPECIES,
@@ -198,7 +200,7 @@ void InputControl::modifyStartTime(uint32_t seconds, bool bPlus)
         tStart += seconds;
 
     _view.setStartUnixTime(tStart);
-    _view.updateFlags |= UpdateFlag::TIME; // |= 연산자 사용 필수!
+    //_view.updateFlags |= UpdateFlag::TIME; // |= 연산자 사용 필수!
 }
 
 void InputControl::increaseDay()
@@ -295,7 +297,7 @@ void InputControl::increaseTurnInterval()
 void InputControl::decreaseTurnInterval()
 {
     uint16_t current = _view.getTurnInterval();
-    const uint16_t MIN_VAL = 1;
+    const uint16_t MIN_VAL = 0;
 
     if (current > MIN_VAL)
     {
@@ -305,7 +307,8 @@ void InputControl::decreaseTurnInterval()
             uint16_t next = current - step;
             _view.setTurnInterval(next < MIN_VAL ? MIN_VAL : next);
         }
-        else{
+        else
+        {
             _view.setTurnInterval(MIN_VAL);
         }
     }

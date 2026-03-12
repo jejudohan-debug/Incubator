@@ -17,6 +17,7 @@ private:
     LcdSetupDisplay _setupDisplay;
 
     DisplayState &_view = SystemContext::getInstance().getView();
+    OperateState &_operate = SystemContext::getInstance().getOperate();
 
 public:
     LcdDisplay() : _normalDisplay(_lcd), _setupDisplay(_lcd) {}

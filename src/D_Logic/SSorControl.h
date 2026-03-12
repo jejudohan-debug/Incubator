@@ -6,7 +6,8 @@ class SSorControl
 {
 private:
     DisplayState &_view = SystemContext::getInstance().getView();
-    ActionQueue &_queue = SystemContext::getInstance().getActionQueue();
+    OperateState &_operate = SystemContext::getInstance().getOperate();
+    //ActionQueue &_queue = SystemContext::getInstance().getActionQueue();
 
     unsigned long _heatingOnTime = 0;
     unsigned long _heatingOffTime = 0;

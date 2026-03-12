@@ -1,48 +1,40 @@
 #pragma once
 
 #include <Arduino.h>
-//#include "A_Core/Interfaces.h"
+// #include "A_Core/Interfaces.h"
 
-class PID_SSR_Actuator 
+class PID_SSR_Actuator
 {
 private:
-    uint8_t _pin;
-    bool _activeLow;
-    double _output; // PID로부터 전달받을 0~255 사이의 값
+  uint8_t _pin;
+  bool _activeLow;
+  double _output; // PID로부터 전달받을 0~255 사이의 값
+
+  int32_t Kp_int = 50; // 실제 Kp가 5.0라면 5.0 * 10 = 50
+  int32_t Ki_int = 1;  // 실제 Ki가 0.1이라면 0.1 * 10 = 1
+  int32_t Kd_int = 5;  // 실제 Kd가 1.0이라면 1.0 * 10 = 10
+
+  int32_t integral = 0;
+  int32_t lastError = 0;
+
+  int16_t computeIntegerPID(uint16_t target, uint16_t current);
+  void controlHeater(int pidOutput);
 
 public:
-    PID_SSR_Actuator(uint8_t pin, bool activeLow = false) 
-        : _pin(pin), _activeLow(activeLow), _output(0.0) {}
+  PID_SSR_Actuator(uint8_t pin, bool activeLow = false)
+      : _pin(pin), _activeLow(activeLow), _output(0.0) {}
 
-    void init() {
-        pinMode(_pin, OUTPUT);
-        stop(); // 초기 상태는 Off
-    }
+  void init();
 
-    // PID 연산 결과(0~255)를 업데이트하는 함수
-    void setOutput(double output) {
-        _output = constrain(output, 0, 255);
-    }
+  // PID 연산 결과(0~255)를 업데이트하는 함수
+  void setOutput(double output);
 
-    // 실제 SSR 제어: PWM 방식을 사용하거나 Time-Proportioning 방식을 사용
-    void update() {
-        // SSR은 반응이 빠르므로 analogWrite(PWM)를 사용할 수 있습니다.
-        // 만약 AC SSR의 특성에 따라 PWM이 불안정하다면 Time-Proportioning 로직으로 변경 가능합니다.
-        int rawValue = (int)_output;
-        if (_activeLow) {
-            analogWrite(_pin, 255 - rawValue);
-        } else {
-            analogWrite(_pin, rawValue);
-        }
-    }
-
-    void stop() {
-        _output = 0;
-        update();
-    }
+  // 실제 SSR 제어: PWM 방식을 사용하거나 Time-Proportioning 방식을 사용
+  void update();
+  void stop();
 };
 
-// PID AutoTune
+/*/ PID AutoTune
 #include <PID_v1.h>
 #include <PID_AutoTune_v0.h>
 #include <DHT.h>
@@ -69,9 +61,9 @@ const unsigned long READ_INTERVAL = 3000; // 3초 주기
 void setup() {
   Serial.begin(9600);
   dht.begin();
-  
+
   Setpoint = 37.5; // 목표 온도
-  
+
   // 튜닝 설정
   aTune.SetControlLookAhead(20); // 노이즈 방지 (값이 클수록 보수적)
   aTune.SetNoiseBand(0.2);       // 센서 노이즈 허용 오차 (DHT22는 0.1~0.2 적당)
@@ -98,18 +90,18 @@ void loop() {
       if (tuning) {
         // --- 자동 튜닝 모드 ---
         byte val = aTune.Runtime();
-        
+
         if (val != 0) { // 튜닝 완료 시
           tuning = false;
           kp = aTune.GetKp();
           ki = aTune.GetKi();
           kd = aTune.GetKd();
-          
+
           Serial.println("--- 튜닝 완료! ---");
           Serial.print("Kp: "); Serial.println(kp);
           Serial.print("Ki: "); Serial.println(ki);
           Serial.print("Kd: "); Serial.println(kd);
-          
+
           myPID.SetTunings(kp, ki, kd); // 계산된 값을 PID에 적용
         }
         analogWrite(SSR_PIN, Output); // 튜닝 중에는 aTune이 Output을 제어함
@@ -125,3 +117,4 @@ void loop() {
     }
   }
 }
+*/

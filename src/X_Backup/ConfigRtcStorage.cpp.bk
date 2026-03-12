@@ -1,5 +1,17 @@
 #include "ConfigRtcStorage.h"
 
+uint8_t EEPROMDevice::calculateChecksum(const SystemConfig &cfg)
+{
+    uint8_t *ptr = (uint8_t *)&cfg;
+    uint8_t sum = 0;
+    // 마지막 checksum 필드 전까지 루프
+    for (size_t i = 0; i < sizeof(SystemConfig) - 1; i++)
+    {
+        sum ^= ptr[i];
+    }
+    return sum;
+}
+
 void ConfigRtcStorage::init()
 {
     memset(&_config, 0, sizeof(SystemConfig));
@@ -47,19 +59,8 @@ void ConfigRtcStorage::save()
     _config.checksum = calculateChecksum(_config);
 
     _rtcDevice.saveConfig(_config);
-    notify(EventFlag::RTC_SAVE, _config);
-}
 
-uint8_t ConfigRtcStorage::calculateChecksum(const SystemConfig &cfg)
-{
-    uint8_t *ptr = (uint8_t *)&cfg;
-    uint8_t sum = 0;
-    // 마지막 checksum 필드 전까지 루프
-    for (size_t i = 0; i < sizeof(SystemConfig) - 1; i++)
-    {
-        sum ^= ptr[i];
-    }
-    return sum;
+    notify(EventFlag::RTC_SAVE, _config);
 }
 
 // 3. 특정 종 선택 시 설정값 동기화

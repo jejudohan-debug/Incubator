@@ -10,6 +10,7 @@ private:
     Button::Group<BUTTON_CNT> &_btns;
 
     DisplayState &_view = SystemContext::getInstance().getView();
+    OperateState &_operate = SystemContext::getInstance().getOperate();
     ActionQueue &_actionQueue = SystemContext::getInstance().getActionQueue();
 
     void handleBtnSelect(const ButtonEvent evt);

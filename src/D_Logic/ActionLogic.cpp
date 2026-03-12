@@ -7,7 +7,7 @@ void ActionLogic::init()
         if (mgr)
             mgr->init();
     }
-    _cfgRtcStor.init();
+    _cfgEEPROM.init();
     _outManager.init();
     _display.init();
 
@@ -26,7 +26,6 @@ void ActionLogic::update()
         if (mgr)
             mgr->update();
     }
-    _cfgRtcStor.update();
 
     while (!_actionQueue.isEmpty())
     {
@@ -49,6 +48,7 @@ void ActionLogic::update()
         }
     }
 
+    _cfgEEPROM.update();
     _outManager.update();
     _display.update(); // LCD 갱신
 

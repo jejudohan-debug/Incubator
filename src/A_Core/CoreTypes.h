@@ -1,5 +1,9 @@
 #pragma once
-#include <arduino.h>
+#include <Arduino.h>
+
+#define BUTTON_CNT 4
+#define RELAY_CNT 3
+#define TURN_DURATION 12 // SECONDS
 
 template <typename T, size_t N>
 struct NormalGroup
@@ -101,7 +105,6 @@ struct SpeciesProfile
     float getHatchHumi() const { return hatchHumi / 10.0f; }
 };
 
-#define BUTTON_CNT 4
 namespace EventFlag
 {
     using Type = uint16_t;
@@ -110,7 +113,7 @@ namespace EventFlag
     const Type BTN_SELECT = 1 << 0;
     const Type BTN_UP = 1 << 1;
     const Type BTN_DOWN = 1 << 2;
-    const Type LIMIT_SW= 1 << 3;
+    const Type LIMIT_SW = 1 << 3;
     const Type DHT_TEMP = 1 << 4;
     const Type DHT_HUMI = 1 << 5;
     const Type RTC_TIME = 1 << 6;
@@ -159,7 +162,7 @@ namespace OperateStateFlag
 
     // 수동 모드 플래그들
     const Type M_HEAT = 1 << 3; // 히터 수동 제어 중
-    const Type M_FAN  = 1 << 4; // 팬 수동 제어 중
+    const Type M_FAN = 1 << 4;  // 팬 수동 제어 중
     const Type M_TURN = 1 << 5; // 전란 수동 제어 중
 
     const Type WAITING = 1 << 6;
@@ -178,24 +181,14 @@ namespace UpdateFlag
 
     const Type NONE = 0;
     const Type STEP = 1 << 0;
-    const Type C_TEMP = 1 << 1;
-    const Type C_HUMI = 1 << 2;
-    const Type TIME = 1 << 3;
+    const Type CURRENT_VALUE = 1 << 1;
+    const Type TARGET_VALUE = 1 << 2;
 
-    const Type R_HEAT = 1 << 4; // 히터 릴레이 상태 변경
-    const Type R_FAN = 1 << 5;  // 가습기 릴레이 상태 변경
-    const Type R_TURN = 1 << 6; // 전란 모터 릴레이 상태 변경
-    const Type SPECIES = 1 << 7;
-
-    const Type T_TEMP = 1 << 8;
-    const Type T_HUMI = 1 << 9;
-    const Type T_INTERVAL = 1 << 10;
-    const Type T_DURATION = 1 << 11;
-
-    const Type CFG_LOAD = 1 << 12;
-    const Type CFG_SAVE = 1 << 13;
-    const Type WAITING = 1 << 14; // 확인 과정
-    const Type ALERT = 1 << 15;   // 에러 발생 상태
+    const Type RELAY_STATE = 1 << 3; // 릴레이 상태 변경
+    const Type TIME = 1 << 4;
+    const Type SPECIES = 1 << 5;
+    // 6. 설정 데이터 처리 (EEPROM Load/Save)
+    const Type CONFIG_EVENT = 1 << 6;
 
     const Type ALL = 0xFFFF; // 16비트 전체 갱신
 
@@ -214,8 +207,10 @@ struct __attribute__((packed)) SystemConfig
     uint16_t turnInterval;   // (2 bytes)
     uint16_t turnDuration;
     uint32_t incubationStartTime; // (4 bytes)
-    uint8_t checksum;             // 데이터 무결성 검사 (1 byte)
-    // 총 16 바이트
+    // PID 게인 (10배 스케일링 된 정수)
+    // int16_t kp, ki, kd;
+
+    uint8_t checksum; // 데이터 무결성 검사 (1 byte)
 
     bool operator==(const SystemConfig &other) const
     {

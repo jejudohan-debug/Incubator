@@ -25,6 +25,12 @@ DisplayState &SystemContext::getView()
     return view;
 }
 
+OperateState &SystemContext::getOperate()
+{
+    static OperateState opr;
+    return opr;
+}
+
 ActionQueue &SystemContext::getActionQueue()
 {
     static ActionQueue queue;

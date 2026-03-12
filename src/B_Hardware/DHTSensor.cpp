@@ -5,11 +5,9 @@ void DHTSensor::init()
 {
     _dht.begin();
 
-    _lastTemp = NAN;
-    _lastHumi = NAN;
     _lastReadTime = millis();
 
-    Serial.println(F("DHT22: Initialized. Waiting 2s for stabilization..."));
+    Serial.println(F("DHT22: Initialized."));
 }
 
 void DHTSensor::update()

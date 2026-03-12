@@ -11,7 +11,7 @@ const SpeciesProfile SpeciesContext::speciesTable[] PROGMEM = {
     // 부화기간, 파각시작일, 온도, 습도, 파각기습도,전란주기
     {name_0, 21, 18, 375, 450, 700, 180},
     {name_1, 28, 25, 372, 550, 800, 120},
-    {name_2, 30, 27, 370, 550, 850, 120},
+    {name_2, 30, 27, 370, 550, 800, 120},
     {name_3, 17, 14, 377, 500, 750, 60},
     {name_4, 30, 0, 350, 500, 500, 0}};
 
@@ -37,11 +37,29 @@ const char *SpeciesContext::getSpeciesName(uint8_t index)
 // Serial.println((__FlashStringHelper*)namePtr);
 // lcd.print((__FlashStringHelper*)namePtr);
 
-int SpeciesContext::getTotalDays(uint8_t index)
+uint8_t SpeciesContext::getTotalDays(uint8_t index)
 {
     if (index >= static_cast<uint8_t>(Species::COUNT))
         return -1;
-    return (int)pgm_read_word(&speciesTable[index].totalDays);
+    return (int)pgm_read_byte(&speciesTable[index].totalDays);
+    //return (int)pgm_read_word(&speciesTable[index].totalDays);
+}
+
+uint8_t SpeciesContext::getTotalDays(Species s)
+{
+    return getTotalDays(static_cast<uint8_t>(s));
+}
+
+uint8_t SpeciesContext::getHatchStartDay(uint8_t index)
+{
+    if (index >= static_cast<uint8_t>(Species::COUNT))
+        return -1;
+    return (int)pgm_read_byte(&speciesTable[index].hatchStartDay);
+}
+
+uint8_t SpeciesContext::getHatchStartDay(Species s)
+{
+    return getHatchStartDay(static_cast<uint8_t>(s));
 }
 
 // 특정 종의 프로필을 가져옵니다.

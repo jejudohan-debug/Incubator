@@ -1,0 +1,22 @@
+#include <Arduino.h>
+#include <EEPROM.h>
+#include "A_Core/CoreTypes.h"
+
+class EEPROMDevice
+{
+private:
+    static constexpr uint16_t MAGIC_SIG = 0xABCD;
+
+    SystemConfig _config;
+    const int CONFIG_ADDR = 0;
+
+    uint8_t calculateChecksum(const SystemConfig &cfg);
+
+public:
+    EEPROMDevice() = default;
+
+    void saveToEEPROM();
+    bool loadFromEEPROM();
+    void setConfig(SystemConfig &config);
+    SystemConfig &getConfig();
+};

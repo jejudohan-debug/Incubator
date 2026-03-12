@@ -47,7 +47,7 @@ void EventBtnManager::handleBtnSelect(const ButtonEvent evt)
             _actionQueue.push(SystemAction::FAN_STOP);
             _actionQueue.push(SystemAction::TURN_STOP);
         }*/
-        _actionQueue.push(_view.getWaiting() ? SystemAction::NONE : SystemAction::MOVE_NEXT);
+        _actionQueue.push(_operate.getWaiting() ? SystemAction::NONE : SystemAction::MOVE_NEXT);
     }
 }
 
@@ -78,7 +78,7 @@ void EventBtnManager::handleBtnUp(const ButtonEvent evt)
     default:
         if (evt == ButtonEvent::CLICK)
         {
-            _actionQueue.push(_view.getWaiting() ? SystemAction::SAVE_YES : SystemAction::VALUE_UP);
+            _actionQueue.push(_operate.getWaiting() ? SystemAction::SAVE_YES : SystemAction::VALUE_UP);
         }
         break;
     }
@@ -103,7 +103,7 @@ void EventBtnManager::handleBtnDown(const ButtonEvent evt)
     default:
         if (evt == ButtonEvent::CLICK)
         {
-            _actionQueue.push(_view.getWaiting() ? SystemAction::SAVE_NO : SystemAction::VALUE_DOWN);
+            _actionQueue.push(_operate.getWaiting() ? SystemAction::SAVE_NO : SystemAction::VALUE_DOWN);
         }
         break;
     }

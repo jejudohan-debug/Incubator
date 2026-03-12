@@ -1,0 +1,46 @@
+#include "EEPROMDevice.h"
+
+uint8_t EEPROMDevice::calculateChecksum(const SystemConfig &cfg)
+{
+    uint8_t *ptr = (uint8_t *)&cfg;
+    uint8_t sum = 0;
+    // 마지막 checksum 필드 전까지 루프
+    for (size_t i = 0; i < sizeof(SystemConfig) - 1; i++)
+    {
+        sum ^= ptr[i];
+    }
+    return sum;
+}
+
+void EEPROMDevice::saveToEEPROM()
+{
+    _config.signature = MAGIC_SIG; // 0xABCD
+    _config.checksum = calculateChecksum(_config);
+    EEPROM.put(CONFIG_ADDR, _config);
+}
+
+bool EEPROMDevice::loadFromEEPROM()
+{
+    SystemConfig temp;
+    EEPROM.get(CONFIG_ADDR, temp);
+
+    // 시그니처와 체크섬 동시 확인
+    if (temp.signature == MAGIC_SIG && temp.checksum == calculateChecksum(temp))
+    {
+        _config = temp;
+        return true;
+    }
+
+    // 데이터가 깨졌거나 처음 사용 시
+    return false;
+}
+
+void EEPROMDevice::setConfig(SystemConfig &config)
+{
+    _config = config;
+}
+
+SystemConfig &EEPROMDevice::getConfig()
+{
+    return _config;
+}

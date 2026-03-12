@@ -15,6 +15,7 @@ private:
     LiquidCrystal_I2C &_lcd;
 
     DisplayState &_view = SystemContext::getInstance().getView();
+    OperateState &_operate = SystemContext::getInstance().getOperate();
     SpeciesContext &_species = SystemContext::getInstance().getSpeciesContext();
 
 public:

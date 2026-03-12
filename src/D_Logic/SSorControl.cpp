@@ -17,7 +17,7 @@ void SSorControl::handleAction(SystemAction action)
 
 void SSorControl::tempStrategy()
 {
-    if (_view.getManualHeat()) return;
+    if (_operate.getManualHeat()) return;
 
     const uint16_t TEMP_GAP = 5;
     const unsigned long RELAY_DELAY = 10000; // 10초
@@ -25,19 +25,21 @@ void SSorControl::tempStrategy()
 
     uint16_t currentTemp = _view.getCurrentTempFixed();
     uint16_t targetTemp = _view.getTargetTempFixed();
-    bool isHeating = _view.getRelayHeat();
+    bool isHeating = _operate.getRelayHeat();
 
     if (!isHeating)
     {
         if ((now - _heatingOffTime >= RELAY_DELAY) &&
             (currentTemp <= targetTemp - TEMP_GAP)) {
-            _view.setRelayHeat(true);
+            _operate.setRelayHeat(true);
+            _view.updateRelayFlag();
             _startTemp = currentTemp;
             _heatingOnTime = now;
         }
     } else {
         if (currentTemp >= targetTemp) {
-            _view.setRelayHeat(false);
+            _operate.setRelayHeat(false);
+            _view.updateRelayFlag();
             _heatingOffTime = now;
         }
     }
@@ -45,41 +47,44 @@ void SSorControl::tempStrategy()
 
 void SSorControl::humiStrategy()
 {
-    if (_view.getManualFan()) return;
+    if (_operate.getManualFan()) return;
     
     const uint16_t HUMI_GAP = 20;
     uint16_t currentHumi = _view.getCurrentHumiFixed();
     uint16_t targetHumi = _view.getTargetHumiFixed();
 
-    if (!_view.getRelayFan())
+    if (!_operate.getRelayFan())
     {
-        if (currentHumi >= targetHumi - HUMI_GAP)
+        if (currentHumi > targetHumi + HUMI_GAP)
         {
-            _view.setRelayFan(true);
+            _operate.setRelayFan(true);
+            _view.updateRelayFlag();
         }
     } else {
-        if (currentHumi <= targetHumi + HUMI_GAP)
+        if (currentHumi < targetHumi - HUMI_GAP)
         {
-            _view.setRelayFan(false);
+            _operate.setRelayFan(false);
+            _view.updateRelayFlag();
         }
     }
 }
 
 void SSorControl::checkHeatHealth()
 {
-    if (_view.getRelayHeat())
+    if (_operate.getRelayHeat())
     {
         // 5분이 지났는데 온도가 시작 시점보다 안 올랐다면?
         if (millis() - _heatingOnTime > 300000)
         {
             if (_view.getCurrentTempFixed() < _startTemp + 1)
             {
-                _view.setAlert(true); // 시스템 중단 및 알람
-                _view.setRelayHeat(false);
+                _operate.setAlert(true); // 시스템 중단 및 알람
+                _operate.setRelayHeat(false);
+                _view.updateRelayFlag();
             }
             else
             {
-                _view.setAlert(false);
+                _operate.setAlert(false);
             }
         }
     }

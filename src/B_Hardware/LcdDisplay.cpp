@@ -34,7 +34,7 @@ void LcdDisplay::setupCustomChars()
 
 void LcdDisplay::update()
 {
-    if (_view.getAlert())
+    if (_operate.getAlert())
     {
         blinkBacklight();
         return;

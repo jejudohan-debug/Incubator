@@ -23,6 +23,6 @@ public:
 
     uint32_t getUnixTime();
     void setTime(uint32_t timestamp);
-    void saveConfig(const SystemConfig &config);
-    void loadConfig(SystemConfig &config);
+    // void saveConfig(const SystemConfig &config);
+    // void loadConfig(SystemConfig &config);
 };

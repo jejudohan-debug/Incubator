@@ -1,7 +1,7 @@
 #pragma once
 #include "A_Core/Interfaces.h"
 #include "A_Core/SystemContext.h"
-#include "C_Manager/ConfigRtcStorage.h"
+#include "C_Manager/ConfigEEPROM.h"
 
 #define ACTION_CNT 7
 #define INCREASE_CNT 7
@@ -16,13 +16,15 @@ private:
     static const IncreaseFunc _increaseMap[];
     static const DecreaseFunc _decreaseMap[];
 
-    ConfigRtcStorage &_cfgRtcStor;
+    //ConfigRtcStorage &_cfgRtcStor;
+    ConfigEEPROM &_cfgEEPROM;
 
     DisplayState &_view = SystemContext::getInstance().getView();
+    OperateState &_operate = SystemContext::getInstance().getOperate();
 
 public:
-    InputControl(ConfigRtcStorage &cfgRtcStr)
-        : _cfgRtcStor(cfgRtcStr) {}
+    InputControl(ConfigEEPROM &cfgEEPROM)
+        : _cfgEEPROM(cfgEEPROM) {}
 
     void handleAction(SystemAction action);
 

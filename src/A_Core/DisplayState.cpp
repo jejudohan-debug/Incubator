@@ -25,24 +25,17 @@ void DisplayState::updateField(T &field, T newValue, UpdateFlag::Type flag)
     }
 }
 
-void DisplayState::setOperateFlag(OperateStateFlag::Type oFlag, bool enable, UpdateFlag::Type uFlag)
-{
-    if (enable)
-        _operateStateFlag |= oFlag; // 비트 켜기 (OR)
-    else
-        _operateStateFlag &= ~oFlag; // 비트 끄기 (AND NOT)
-    updateFlags |= uFlag;
-}
-
-void DisplayState::setOperateFlag(OperateStateFlag::Type oFlag, bool enable)
-{
-    if (enable)
-        _operateStateFlag |= oFlag; // 비트 켜기 (OR)
-    else
-        _operateStateFlag &= ~oFlag; // 비트 끄기 (AND NOT)
-}
-
 // --- setter, getter ---
+void DisplayState::updateRelayFlag()
+{
+    updateFlags |= UpdateFlag::RELAY_STATE;
+}
+
+bool DisplayState::getRelayFlag()
+{
+    return UpdateFlag::hasFlag(updateFlags, UpdateFlag::RELAY_STATE);
+}
+
 void DisplayState::setCurrentTemp(float val)
 {
     setCurrentTemp(floatToFixed(val));
@@ -50,7 +43,7 @@ void DisplayState::setCurrentTemp(float val)
 
 void DisplayState::setCurrentTemp(uint16_t val)
 {
-    updateField(_currentTemp, val, UpdateFlag::C_TEMP);
+    updateField(_currentTemp, val, UpdateFlag::CURRENT_VALUE);
 }
 
 float DisplayState::getCurrentTempFloat() const
@@ -70,7 +63,7 @@ void DisplayState::setCurrentHumi(float val)
 
 void DisplayState::setCurrentHumi(uint16_t val)
 {
-    updateField(_currentHumi, val, UpdateFlag::C_HUMI);
+    updateField(_currentHumi, val, UpdateFlag::CURRENT_VALUE);
 }
 
 float DisplayState::getCurrentHumiFloat() const
@@ -90,7 +83,7 @@ void DisplayState::setTargetTemp(float val)
 
 void DisplayState::setTargetTemp(uint16_t val)
 {
-    updateField(_targetTemp, val, UpdateFlag::T_TEMP);
+    updateField(_targetTemp, val, UpdateFlag::TARGET_VALUE);
 }
 
 float DisplayState::getTargetTempFloat() const
@@ -110,7 +103,7 @@ void DisplayState::setTargetHumi(float val)
 
 void DisplayState::setTargetHumi(uint16_t val)
 {
-    updateField(_targetHumi, val, UpdateFlag::T_HUMI);
+    updateField(_targetHumi, val, UpdateFlag::TARGET_VALUE);
 }
 
 float DisplayState::getTargetHumiFloat() const
@@ -125,7 +118,7 @@ uint16_t DisplayState::getTargetHumiFixed() const
 
 void DisplayState::setTurnInterval(uint16_t val)
 {
-    updateField(_turnInterval, val, UpdateFlag::T_INTERVAL);
+    updateField(_turnInterval, val, UpdateFlag::TARGET_VALUE);
 }
 
 uint16_t DisplayState::getTurnInterval() const
@@ -135,116 +128,12 @@ uint16_t DisplayState::getTurnInterval() const
 
 void DisplayState::setTurnDuration(uint16_t val)
 {
-    updateField(_turnDuration, val, UpdateFlag::T_DURATION);
+    updateField(_turnDuration, val, UpdateFlag::TARGET_VALUE);
 }
 
 uint16_t DisplayState::getTurnDuration() const
 {
     return _turnDuration;
-}
-
-void DisplayState::setRelayHeat(bool val)
-{
-    if (getRelayHeat() == val)
-        return;
-
-    setOperateFlag(OperateStateFlag::HEAT, val, UpdateFlag::R_HEAT);
-}
-
-bool DisplayState::getRelayHeat() const
-{
-    return OperateStateFlag::hasFlag(_operateStateFlag, OperateStateFlag::HEAT);
-}
-
-void DisplayState::setRelayFan(bool val)
-{
-    if (getRelayFan() == val)
-        return;
-
-    setOperateFlag(OperateStateFlag::FAN, val, UpdateFlag::R_FAN);
-}
-
-bool DisplayState::getRelayFan() const
-{
-    return OperateStateFlag::hasFlag(_operateStateFlag, OperateStateFlag::FAN);
-}
-
-void DisplayState::setRelayTurn(bool val)
-{
-    if (getRelayTurn() == val)
-        return;
-
-    setOperateFlag(OperateStateFlag::TURN, val, UpdateFlag::R_TURN);
-}
-
-bool DisplayState::getRelayTurn() const
-{
-    return OperateStateFlag::hasFlag(_operateStateFlag, OperateStateFlag::TURN);
-}
-
-void DisplayState::setWaiting(bool val)
-{
-    if (getWaiting() == val)
-        return;
-
-    setOperateFlag(OperateStateFlag::WAITING, val, UpdateFlag::WAITING);
-}
-
-bool DisplayState::getWaiting() const
-{
-    return OperateStateFlag::hasFlag(_operateStateFlag, OperateStateFlag::WAITING);
-}
-
-void DisplayState::setAlert(bool val)
-{
-    if (getAlert() == val)
-        return;
-
-    setOperateFlag(OperateStateFlag::ALERT, val, UpdateFlag::ALERT);
-}
-
-bool DisplayState::getAlert() const
-{
-    return OperateStateFlag::hasFlag(_operateStateFlag, OperateStateFlag::ALERT);
-}
-
-void DisplayState::setManualHeat(bool val)
-{
-    if (getManualHeat() == val)
-        return;
-
-    setOperateFlag(OperateStateFlag::M_HEAT, val);
-}
-
-bool DisplayState::getManualHeat() const
-{
-    return OperateStateFlag::hasFlag(_operateStateFlag, OperateStateFlag::M_HEAT);
-}
-
-void DisplayState::setManualFan(bool val)
-{
-    if (getManualFan() == val)
-        return;
-
-    setOperateFlag(OperateStateFlag::M_FAN, val);
-}
-
-bool DisplayState::getManualFan() const
-{
-    return OperateStateFlag::hasFlag(_operateStateFlag, OperateStateFlag::M_FAN);
-}
-
-void DisplayState::setManualTurn(bool val)
-{
-    if (getManualTurn() == val)
-        return;
-
-    setOperateFlag(OperateStateFlag::M_TURN, val);
-}
-
-bool DisplayState::getManualTurn() const
-{
-    return OperateStateFlag::hasFlag(_operateStateFlag, OperateStateFlag::M_TURN);
 }
 
 void DisplayState::setPageStep(PageStep s)
@@ -304,6 +193,10 @@ void DisplayState::setCurrentUnixTime(uint32_t val)
     calculateElapsedTime();
 }
 
+uint32_t DisplayState::getCurrentUnixTime()
+{
+    return _currentUnixTime;
+}
 void DisplayState::setStartUnixTime(uint32_t t)
 {
     if (_startUnixTime == t)
