@@ -14,12 +14,13 @@ private:
     struct RelayMap
     {
         RelayIdx index;
+        UpdateFlag::Type flag;
         bool (OperateState::*getter)() const;
     };
     const RelayMap _relayMaps[RELAY_CNT] = {
-        {HEAT, &OperateState::getRelayHeat},
-        {FAN, &OperateState::getRelayFan},
-        {TURN, &OperateState::getRelayTurn}};
+        {FAN, UpdateFlag::RELAY_FAN, &OperateState::getRelayFan},
+        {TURN, UpdateFlag::RELAY_TURN, &OperateState::getRelayTurn},
+        {HEAT, UpdateFlag::RELAY_HEAT, &OperateState::getRelayHeat}};
 
     DisplayState &_view = SystemContext::getInstance().getView();
     OperateState &_operate = SystemContext::getInstance().getOperate();

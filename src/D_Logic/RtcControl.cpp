@@ -64,7 +64,7 @@ void RtcControl::turnStrategy()
     if (_operate.getRelayTurn() != shouldTurn)
     {
         _operate.setRelayTurn(shouldTurn);
-        _view.updateRelayFlag();
+        _view.updateRelayFlag(UpdateFlag::RELAY_TURN);
     }
 }
 

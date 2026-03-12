@@ -26,14 +26,14 @@ void DisplayState::updateField(T &field, T newValue, UpdateFlag::Type flag)
 }
 
 // --- setter, getter ---
-void DisplayState::updateRelayFlag()
+void DisplayState::updateRelayFlag(UpdateFlag::Type flag)
 {
-    updateFlags |= UpdateFlag::RELAY_STATE;
+    updateFlags |= flag;
 }
 
-bool DisplayState::getRelayFlag()
+bool DisplayState::getRelayFlag(UpdateFlag::Type flag)
 {
-    return UpdateFlag::hasFlag(updateFlags, UpdateFlag::RELAY_STATE);
+    return UpdateFlag::hasFlag(updateFlags, flag);
 }
 
 void DisplayState::setCurrentTemp(float val)

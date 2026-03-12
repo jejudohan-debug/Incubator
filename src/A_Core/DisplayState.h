@@ -94,8 +94,8 @@ public:
     uint8_t getElapsedHour() const;
     uint8_t getElapsedMinute() const;
 
-    void updateRelayFlag();
-    bool getRelayFlag();
+    void updateRelayFlag(UpdateFlag::Type flag);
+    bool getRelayFlag(UpdateFlag::Type flag);
     
     /*template <typename SetterFunc>
     void InputControl::updateActionState(

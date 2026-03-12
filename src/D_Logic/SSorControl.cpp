@@ -32,14 +32,14 @@ void SSorControl::tempStrategy()
         if ((now - _heatingOffTime >= RELAY_DELAY) &&
             (currentTemp <= targetTemp - TEMP_GAP)) {
             _operate.setRelayHeat(true);
-            _view.updateRelayFlag();
+            _view.updateRelayFlag(UpdateFlag::RELAY_HEAT);
             _startTemp = currentTemp;
             _heatingOnTime = now;
         }
     } else {
         if (currentTemp >= targetTemp) {
             _operate.setRelayHeat(false);
-            _view.updateRelayFlag();
+            _view.updateRelayFlag(UpdateFlag::RELAY_HEAT);
             _heatingOffTime = now;
         }
     }
@@ -58,13 +58,13 @@ void SSorControl::humiStrategy()
         if (currentHumi > targetHumi + HUMI_GAP)
         {
             _operate.setRelayFan(true);
-            _view.updateRelayFlag();
+            _view.updateRelayFlag(UpdateFlag::RELAY_FAN);
         }
     } else {
         if (currentHumi < targetHumi - HUMI_GAP)
         {
             _operate.setRelayFan(false);
-            _view.updateRelayFlag();
+            _view.updateRelayFlag(UpdateFlag::RELAY_FAN);
         }
     }
 }
@@ -80,7 +80,7 @@ void SSorControl::checkHeatHealth()
             {
                 _operate.setAlert(true); // 시스템 중단 및 알람
                 _operate.setRelayHeat(false);
-                _view.updateRelayFlag();
+                _view.updateRelayFlag(UpdateFlag::RELAY_HEAT);
             }
             else
             {

@@ -184,11 +184,14 @@ namespace UpdateFlag
     const Type CURRENT_VALUE = 1 << 1;
     const Type TARGET_VALUE = 1 << 2;
 
-    const Type RELAY_STATE = 1 << 3; // 릴레이 상태 변경
-    const Type TIME = 1 << 4;
-    const Type SPECIES = 1 << 5;
+    const Type RELAY_FAN = 1 << 3;  // 릴레이 상태 변경
+    const Type RELAY_TURN = 1 << 4; // 개별로 on/off 반영
+    const Type RELAY_HEAT = 1 << 5; // SSR
+
+    const Type TIME = 1 << 6;
+    const Type SPECIES = 1 << 7;
     // 6. 설정 데이터 처리 (EEPROM Load/Save)
-    const Type CONFIG_EVENT = 1 << 6;
+    const Type CONFIG_EVENT = 1 << 8;
 
     const Type ALL = 0xFFFF; // 16비트 전체 갱신
 

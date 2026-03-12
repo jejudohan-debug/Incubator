@@ -127,42 +127,42 @@ void InputControl::saveNo()
 void InputControl::startHeat()
 {
     _operate.setManualHeat(true);
-    _view.updateRelayFlag();
+    _view.updateRelayFlag(UpdateFlag::RELAY_HEAT);
 }
 
 // HEATER_STOP,  // 모터 수동 정지
 void InputControl::stopHeat()
 {
     _operate.setManualHeat(false);
-    _view.updateRelayFlag();
+    _view.updateRelayFlag(UpdateFlag::RELAY_HEAT);
 }
 
 // FAN_START,
 void InputControl::startFan()
 {
     _operate.setManualFan(true);
-    _view.updateRelayFlag();
+    _view.updateRelayFlag(UpdateFlag::RELAY_FAN);
 }
 
 // FAN_STOP,
 void InputControl::stopFan()
 {
     _operate.setManualFan(false);
-    _view.updateRelayFlag();
+    _view.updateRelayFlag(UpdateFlag::RELAY_FAN);
 }
 
 // TURN_START,
 void InputControl::startTurn()
 {
     _operate.setManualTurn(true);
-    _view.updateRelayFlag();
+    _view.updateRelayFlag(UpdateFlag::RELAY_TURN);
 }
 
 // TURN_STOP,
 void InputControl::stopTurn()
 {
     _operate.setManualTurn(false);
-    _view.updateRelayFlag();
+    _view.updateRelayFlag(UpdateFlag::RELAY_TURN);
 }
 
 // SPECIES,
