@@ -21,7 +21,11 @@ const InputControl::IncreaseFunc InputControl::_increaseMap[] PROGMEM = {
     &InputControl::increaseTemperature,
     &InputControl::increaseHumidity,
     &InputControl::increaseTurnInterval,
-    &InputControl::increaseTurnDuration};
+    &InputControl::increaseTurnDuration,
+    &InputControl::increasePID_Kp,
+    &InputControl::increasePID_Ki,
+    &InputControl::increasePID_Kd
+};
 
 const InputControl::DecreaseFunc InputControl::_decreaseMap[] PROGMEM = {
     &InputControl::decreaseSpecies,
@@ -31,7 +35,11 @@ const InputControl::DecreaseFunc InputControl::_decreaseMap[] PROGMEM = {
     &InputControl::decreaseTemperature,
     &InputControl::decreaseHumidity,
     &InputControl::decreaseTurnInterval,
-    &InputControl::decreaseTurnDuration};
+    &InputControl::decreaseTurnDuration,
+    &InputControl::decreasePID_Kp,
+    &InputControl::decreasePID_Ki,
+    &InputControl::decreasePID_Kd
+};
 
 void InputControl::handleAction(SystemAction action)
 {
@@ -331,6 +339,61 @@ void InputControl::decreaseTurnDuration()
         _view.setTurnDuration(next);
     }
 }
+
+void InputControl::increasePID_Kp()
+{
+    int16_t current = _view.getPID_Kp();
+    if (current < 999) 
+    {
+        _view.setPID_Kp(current + 1);
+    }
+}
+
+void InputControl::decreasePID_Kp()
+{
+    int16_t current = _view.getPID_Kp();
+    if (current > 0)
+    {
+        _view.setPID_Kp(current - 1);
+    }
+}
+
+void InputControl::increasePID_Ki()
+{
+    int16_t current = _view.getPID_Ki();
+    if (current < 999) 
+    {
+        _view.setPID_Ki(current + 1);
+    }
+}
+
+void InputControl::decreasePID_Ki()
+{
+    int16_t current = _view.getPID_Ki();
+    if (current > 0)
+    {
+        _view.setPID_Ki(current - 1);
+    }
+}
+
+void InputControl::increasePID_Kd()
+{
+    int16_t current = _view.getPID_Kd();
+    if (current < 999) 
+    {
+        _view.setPID_Kd(current + 1);
+    }
+}
+
+void InputControl::decreasePID_Kd()
+{
+    int16_t current = _view.getPID_Kd();
+    if (current > 0)
+    {
+        _view.setPID_Kd(current - 1);
+    }
+}
+
 
 /* / CONFIRM,    // 확인
 void InputControl::waitConfirm()

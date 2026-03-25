@@ -30,6 +30,7 @@ void Button::update()
                 //_latchedEvent = DeviceEvent::PRESS;
                 notify(_id, static_cast<uint8_t>(ButtonEvent::PRESS));
                 _internalState = InternalState::PRESSED;
+                _pressStartTime = now;
                 // Serial.println(F("Button Pressed"));
             }
             else
@@ -46,5 +47,24 @@ void Button::update()
             _internalState = InternalState::IDLE;
             // Serial.println(F("Button Clicked"));
         }
+        else if (now - _pressStartTime >= _longPressThreshold) {
+            notify(_id, static_cast<uint8_t>(ButtonEvent::LONG_PRESS));
+            _internalState = InternalState::LONG_HELD;
+            _lastRepeatTime = now;
+        }
+        break;
+    case InternalState::LONG_HELD:
+        if (!isLogicPressed) {
+            notify(_id, static_cast<uint8_t>(ButtonEvent::RELEASE));
+            _internalState = InternalState::IDLE;
+        }
+        else {
+            const unsigned long repeatInterval = 150; // 0.15초마다 숫자 변경
+            if (now - _lastRepeatTime >= repeatInterval) {
+                notify(_id, static_cast<uint8_t>(ButtonEvent::LONG_PRESS));
+                _lastRepeatTime = now;
+            }
+        }
+        break;
     }
 }

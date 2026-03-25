@@ -5,12 +5,12 @@
 #include "A_Core/SystemContext.h"
 #include "A_Core/Interfaces.h"
 
-class LcdSetupDisplay   // : public ILcdDisplay
+class LcdSetupDisplay // : public ILcdDisplay
 {
 private:
     using RenderFunc = void (LcdSetupDisplay::*)();
     static const RenderFunc _renderTable[];
-    static const char* const setupTitle[];
+    static const char *const setupTitle[];
 
     LiquidCrystal_I2C &_lcd;
 
@@ -19,9 +19,9 @@ private:
     SpeciesContext &_species = SystemContext::getInstance().getSpeciesContext();
 
 public:
-    LcdSetupDisplay(LiquidCrystal_I2C& lcd)
+    LcdSetupDisplay(LiquidCrystal_I2C &lcd)
         : _lcd(lcd) {}
-    
+
     virtual void init() {}
     virtual void update();
 
@@ -40,4 +40,7 @@ private:
     void renderHumidity();
     void renderTurnInterval();
     void renderTurnDuration();
+    void renderPID_Kp();
+    void renderPID_Ki();
+    void renderPID_Kd();
 };

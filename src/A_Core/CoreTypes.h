@@ -2,8 +2,10 @@
 #include <Arduino.h>
 
 #define BUTTON_CNT 4
-#define RELAY_CNT 3
-#define TURN_DURATION 12 // SECONDS
+#define RELAY_CNT 2
+#define TURN_DURATION 12          // SECONDS
+#define DHT_READ_INTERVAL 2000    // 3 seconds for stability
+#define SSR_CONTROL_INTERVAL 1000 // 1 seconds
 
 template <typename T, size_t N>
 struct NormalGroup
@@ -82,6 +84,9 @@ enum class PageStep : uint8_t
     TARGET_HUMI,
     TURNINTERVAL,
     TURNDURATION,
+    PID_KP,
+    PID_KI,
+    PID_KD,
     COUNT,
     SETUP_COUNT = COUNT - SETUP_FIRST
 };
@@ -138,17 +143,11 @@ enum class ButtonEvent : uint8_t
     NONE = 0,
     PRESS,
     CLICK,
+    LONG_PRESS,
+    RELEASE
     //    TEMP_CHANGE,
     //   HUMI_CHANGE,
     //    TIME_CHANGE
-};
-
-enum RelayIdx
-{
-    HEAT = 0,
-    FAN = 1,
-    TURN = 2,
-    COUNT
 };
 
 namespace OperateStateFlag
@@ -192,6 +191,7 @@ namespace UpdateFlag
     const Type SPECIES = 1 << 7;
     // 6. 설정 데이터 처리 (EEPROM Load/Save)
     const Type CONFIG_EVENT = 1 << 8;
+    const Type PID_GAIN = 1 << 9;
 
     const Type ALL = 0xFFFF; // 16비트 전체 갱신
 
@@ -211,7 +211,7 @@ struct __attribute__((packed)) SystemConfig
     uint16_t turnDuration;
     uint32_t incubationStartTime; // (4 bytes)
     // PID 게인 (10배 스케일링 된 정수)
-    // int16_t kp, ki, kd;
+    int16_t pidKp, pidKi, pidKd;
 
     uint8_t checksum; // 데이터 무결성 검사 (1 byte)
 

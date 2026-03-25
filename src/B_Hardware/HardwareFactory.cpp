@@ -20,7 +20,7 @@ DHTSensor &HardwareFactory::getDHT()
 
 RTCDevice &HardwareFactory::getRTC()
 {
-    static RTCDevice rtc(Pins::RTC_DAT, Pins::RTC_CLK, Pins::RTC_RST);
+    static RTCDevice rtc; //(Pins::RTC_DAT, Pins::RTC_CLK, Pins::RTC_RST);
     return rtc;
 }
 
@@ -29,12 +29,13 @@ RTCDevice &HardwareFactory::getRTC()
     static EEPROMDevice eeprom;
     return eeprom;
 }
+*/
 
 PID_SSR_Actuator &HardwareFactory::getSSR()
 {
     static PID_SSR_Actuator ssr(Pins::HEATER);
     return ssr;
-}*/
+}
 
 Button::Group<BUTTON_CNT> &HardwareFactory::getButtons()
 {
@@ -46,10 +47,10 @@ Button::Group<BUTTON_CNT> &HardwareFactory::getButtons()
     return btns;
 }
 
-RelayActuator::Group<RELAY_CNT> &HardwareFactory::GetRelays()
+RelayActuator::Group<RELAY_CNT> &HardwareFactory::getRelays()
 {
     static RelayActuator::Group<RELAY_CNT> relays =
-        {{RelayActuator(Pins::HEATER),
+        {{//RelayActuator(Pins::HEATER),
           RelayActuator(Pins::FAN),
           RelayActuator(Pins::TURN)}};
     return relays;

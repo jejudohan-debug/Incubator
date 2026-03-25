@@ -13,7 +13,7 @@ void DHTSensor::init()
 void DHTSensor::update()
 {
     unsigned long current = millis();
-    if (_lastReadTime != 0 && (current - _lastReadTime < READ_INTERVAL)) {
+    if (_lastReadTime != 0 && (current - _lastReadTime < DHT_READ_INTERVAL)) {
         return;
     }
 
@@ -46,17 +46,11 @@ void DHTSensor::update()
         Serial.println(F("DHT22 Warning: Got EXACT 0.00/0.00."));
     }
 
-    updateAndNotify(EventFlag::DHT_TEMP, _lastTemp, t);
-    updateAndNotify(EventFlag::DHT_HUMI, _lastHumi, h);
-}
+    _lastTemp = t;
+    _lastHumi = h;
 
-void DHTSensor::updateAndNotify(EventFlag::Type flag, float &lastValue, float newValue)
-{
-    if (abs(lastValue - newValue) >= 0.1f)
-    {
-        lastValue = newValue;
-        notify(flag, newValue);
-    }
+    notify(EventFlag::DHT_TEMP, t);
+    notify(EventFlag::DHT_HUMI, h);
 }
 
 bool DHTSensor::isValid() const

@@ -17,8 +17,8 @@ private:
     uint32_t _currentUnixTime = 0; // 초 단위
     uint32_t _startUnixTime = 0;   // 초 단위
     uint8_t _d = 0, _h = 0, _m = 0;
-    // int16_t kp = 200, ki = 5, kd = 20;
-
+    int16_t _PID_Kp = 200, _PID_Ki = 5, _PID_Kd = 20;    // PID 인수
+    
     template <typename T>
     void updateField(T &field, T newValue, UpdateFlag::Type flag);
 
@@ -96,6 +96,13 @@ public:
 
     void updateRelayFlag(UpdateFlag::Type flag);
     bool getRelayFlag(UpdateFlag::Type flag);
+
+    void setPID_Kp(int16_t val);
+    void setPID_Ki(int16_t val);
+    void setPID_Kd(int16_t val);
+    int16_t getPID_Kp() const;
+    int16_t getPID_Ki() const;
+    int16_t getPID_Kd() const;
     
     /*template <typename SetterFunc>
     void InputControl::updateActionState(

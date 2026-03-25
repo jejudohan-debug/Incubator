@@ -5,43 +5,16 @@ void SSorControl::handleAction(SystemAction action)
     switch (action)
     {
     case SystemAction::TEMP_CHANGE:
-        tempStrategy();
+        if (!_operate.getManualHeat())
+        {
+            _view.updateRelayFlag(UpdateFlag::RELAY_HEAT);
+        }
         break;
     case SystemAction::HUMI_CHANGE:
         humiStrategy();
         break;
     default:
         break;
-    }
-}
-
-void SSorControl::tempStrategy()
-{
-    if (_operate.getManualHeat()) return;
-
-    const uint16_t TEMP_GAP = 5;
-    const unsigned long RELAY_DELAY = 10000; // 10초
-    unsigned long now = millis();
-
-    uint16_t currentTemp = _view.getCurrentTempFixed();
-    uint16_t targetTemp = _view.getTargetTempFixed();
-    bool isHeating = _operate.getRelayHeat();
-
-    if (!isHeating)
-    {
-        if ((now - _heatingOffTime >= RELAY_DELAY) &&
-            (currentTemp <= targetTemp - TEMP_GAP)) {
-            _operate.setRelayHeat(true);
-            _view.updateRelayFlag(UpdateFlag::RELAY_HEAT);
-            _startTemp = currentTemp;
-            _heatingOnTime = now;
-        }
-    } else {
-        if (currentTemp >= targetTemp) {
-            _operate.setRelayHeat(false);
-            _view.updateRelayFlag(UpdateFlag::RELAY_HEAT);
-            _heatingOffTime = now;
-        }
     }
 }
 
@@ -108,5 +81,35 @@ void SSorControl::checkHeatHealth()
         _view.normal.currentHumi = humi;
         _view.isUpdated = true;
         _queue.push(SystemAction::HUMI_CHANGE);
+    }
+}
+
+void SSorControl::tempStrategy()
+{
+    
+    //const uint16_t TEMP_GAP = 5;
+    //const unsigned long RELAY_DELAY = 10000; // 10초
+    //unsigned long now = millis();
+
+    //uint16_t currentTemp = _view.getCurrentTempFixed();
+    //uint16_t targetTemp = _view.getTargetTempFixed();
+
+    bool isHeating = _operate.getRelayHeat();
+
+    if (!isHeating)
+    {
+        if ((now - _heatingOffTime >= RELAY_DELAY) &&
+            (currentTemp <= targetTemp - TEMP_GAP)) {
+            _operate.setRelayHeat(true);
+            _view.updateRelayFlag(UpdateFlag::RELAY_HEAT);
+            _startTemp = currentTemp;
+            _heatingOnTime = now;
+        }
+    } else {
+        if (currentTemp >= targetTemp) {
+            _operate.setRelayHeat(false);
+            _view.updateRelayFlag(UpdateFlag::RELAY_HEAT);
+            _heatingOffTime = now;
+        }
     }
 }*/

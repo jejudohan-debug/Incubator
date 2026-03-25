@@ -3,6 +3,9 @@
 		{
 			"name": "Incubator",
 			"path": "."
+		},
+		{
+			"path": "../Incubator_V1"
 		}
 	],
 	"settings": {

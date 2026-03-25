@@ -1,24 +1,22 @@
 #pragma once
 
 #include <Arduino.h>
-// #include "A_Core/Interfaces.h"
+#include "A_Core/SystemContext.h"
 
 class PID_SSR_Actuator
 {
 private:
   uint8_t _pin;
   bool _activeLow;
-  double _output; // PID로부터 전달받을 0~255 사이의 값
+  uint8_t _output; // PID로부터 전달받을 0~255 사이의 값
 
-  int32_t Kp_int = 50; // 실제 Kp가 5.0라면 5.0 * 10 = 50
-  int32_t Ki_int = 1;  // 실제 Ki가 0.1이라면 0.1 * 10 = 1
-  int32_t Kd_int = 5;  // 실제 Kd가 1.0이라면 1.0 * 10 = 10
+  //int16_t Kp_int = 50; // 실제 Kp가 5.0라면 5.0 * 10 = 50
+  //int16_t Ki_int = 1;  // 실제 Ki가 0.1이라면 0.1 * 10 = 1
+  //int16_t Kd_int = 5;  // 실제 Kd가 1.0이라면 1.0 * 10 = 10
 
-  int32_t integral = 0;
-  int32_t lastError = 0;
+  DisplayState &_view = SystemContext::getInstance().getView();
 
-  int16_t computeIntegerPID(uint16_t target, uint16_t current);
-  void controlHeater(int pidOutput);
+  void controlHeater(uint16_t pidOutput);
 
 public:
   PID_SSR_Actuator(uint8_t pin, bool activeLow = false)
@@ -26,12 +24,11 @@ public:
 
   void init();
 
-  // PID 연산 결과(0~255)를 업데이트하는 함수
-  void setOutput(double output);
-
   // 실제 SSR 제어: PWM 방식을 사용하거나 Time-Proportioning 방식을 사용
   void update();
   void stop();
+  void setOutput(int16_t val);
+  //void setOutput(double val);
 };
 
 /*/ PID AutoTune

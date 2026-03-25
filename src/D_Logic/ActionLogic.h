@@ -36,7 +36,7 @@ public:
         : _evtBtnMgr(HardwareFactory::getInstance().getButtons()),
           _evtSSorMgr(HardwareFactory::getInstance().getDHT()),
           _evtRtcMgr(HardwareFactory::getInstance().getRTC()),
-          _outManager(HardwareFactory::getInstance().GetRelays()),
+          _outManager(HardwareFactory::getInstance().getRelays(), HardwareFactory::getInstance().getSSR()),
           _inputControl(_cfgEEPROM),
           _rtcControl(_cfgEEPROM),
           _mgrs{&_evtBtnMgr, &_evtRtcMgr, &_evtSSorMgr} {}

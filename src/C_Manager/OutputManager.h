@@ -4,13 +4,22 @@
 #include "A_Core/SystemContext.h"
 #include "B_Hardware/HardwarePins.h"
 #include "B_Hardware/RelayActuator.h"
+#include "B_Hardware/PID_SSR_Actuator.h"
 
-#define RELAY_CNT 3
+enum RelayIdx
+{
+    // HEAT = 0,
+    FAN = 0,
+    TURN = 1,
+    COUNT
+};
 
 class OutputManager
 {
 private:
-    RelayActuator::Group<3> &_relays;
+    RelayActuator::Group<RELAY_CNT> &_relays;
+    PID_SSR_Actuator _ssr;
+
     struct RelayMap
     {
         RelayIdx index;
@@ -19,17 +28,22 @@ private:
     };
     const RelayMap _relayMaps[RELAY_CNT] = {
         {FAN, UpdateFlag::RELAY_FAN, &OperateState::getRelayFan},
-        {TURN, UpdateFlag::RELAY_TURN, &OperateState::getRelayTurn},
-        {HEAT, UpdateFlag::RELAY_HEAT, &OperateState::getRelayHeat}};
+        {TURN, UpdateFlag::RELAY_TURN, &OperateState::getRelayTurn}};
+        //{HEAT, UpdateFlag::RELAY_HEAT, &OperateState::getRelayHeat}};
 
     DisplayState &_view = SystemContext::getInstance().getView();
     OperateState &_operate = SystemContext::getInstance().getOperate();
 
+        // PID 계산
+    int32_t integral = 0;
+    int32_t lastError = 0;
+
+    int16_t computeIntegerPID();
+
 public:
-    OutputManager(RelayActuator::Group<3> &relays)
-        : _relays(relays) {}
+    OutputManager(RelayActuator::Group<RELAY_CNT> &relays, PID_SSR_Actuator &ssr)
+        : _relays(relays), _ssr(ssr) {}
 
     void init();
     void update();
-    // void switchingDevice(UpdateFlag::Type flg);
 };

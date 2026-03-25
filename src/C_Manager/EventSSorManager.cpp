@@ -22,24 +22,15 @@ void EventSSorManager::onNotify(EventFlag::Type flag, const float value)
     switch (flag)
     {
     case EventFlag::DHT_TEMP:
-        handleDhtTemp(value);
+        _view.setCurrentTemp(value);
+        _actionQueue.push(SystemAction::TEMP_CHANGE);
         break;
     case EventFlag::DHT_HUMI:
-        handleDhtHumi(value);
+        _view.setCurrentHumi(value);
+        _actionQueue.push(SystemAction::HUMI_CHANGE);
         break;
     default:
         break;
     }
 }
 
-void EventSSorManager::handleDhtTemp(const float value)
-{
-    _view.setCurrentTemp(value);
-    _actionQueue.push(SystemAction::TEMP_CHANGE);
-}
-
-void EventSSorManager::handleDhtHumi(const float value)
-{
-    _view.setCurrentHumi(value);
-    _actionQueue.push(SystemAction::HUMI_CHANGE);
-}

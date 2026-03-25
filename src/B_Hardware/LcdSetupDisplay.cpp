@@ -8,8 +8,12 @@ const char title4[] PROGMEM = "Setup: Temp.    ";
 const char title5[] PROGMEM = "Setup: Humi.    ";
 const char title6[] PROGMEM = "Setup: INTERVAL.";
 const char title7[] PROGMEM = "Setup: DURATION.";
+const char title8[] PROGMEM = "Setup: PID_Kp   ";
+const char title9[] PROGMEM = "Setup: PID_Ki   ";
+const char title10[] PROGMEM = "Setup: PID_Kd   ";
+
 const char *const LcdSetupDisplay::setupTitle[] PROGMEM = {
-    title0, title1, title2, title3, title4, title5, title6, title7};
+    title0, title1, title2, title3, title4, title5, title6, title7, title8, title9, title10};
 
 const LcdSetupDisplay::RenderFunc LcdSetupDisplay::_renderTable[] PROGMEM = {
     &LcdSetupDisplay::renderSpecies,
@@ -19,7 +23,10 @@ const LcdSetupDisplay::RenderFunc LcdSetupDisplay::_renderTable[] PROGMEM = {
     &LcdSetupDisplay::renderTemperature,
     &LcdSetupDisplay::renderHumidity,
     &LcdSetupDisplay::renderTurnInterval,
-    &LcdSetupDisplay::renderTurnDuration};
+    &LcdSetupDisplay::renderTurnDuration,
+    &LcdSetupDisplay::renderPID_Kp,
+    &LcdSetupDisplay::renderPID_Ki,
+    &LcdSetupDisplay::renderPID_Kd};
 
 void LcdSetupDisplay::printFormatValue(float value)
 {
@@ -151,4 +158,22 @@ void LcdSetupDisplay::renderTurnDuration()
 {
     _lcd.print(_view.getTurnDuration());
     _lcd.print(F(" sec"));
+}
+
+void LcdSetupDisplay::renderPID_Kp()
+{
+    _lcd.print(_view.getPID_Kp());
+    _lcd.print(F(" Int"));
+}
+
+void LcdSetupDisplay::renderPID_Ki()
+{
+    _lcd.print(_view.getPID_Ki());
+    _lcd.print(F(" Int"));
+}
+
+void LcdSetupDisplay::renderPID_Kd()
+{
+    _lcd.print(_view.getPID_Kd());
+    _lcd.print(F(" Int"));
 }

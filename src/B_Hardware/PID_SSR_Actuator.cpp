@@ -6,26 +6,15 @@ void PID_SSR_Actuator::init()
     stop(); // 초기 상태는 Off
 }
 
-// PID 연산 결과(0~255)를 업데이트하는 함수
-void PID_SSR_Actuator::setOutput(double output)
+/*/ PID 연산 결과(0~255)를 업데이트하는 함수
+void PID_SSR_Actuator::setOutput(double val)
 {
-    _output = constrain(output, 0, 255);
-}
+    _output = constrain(val, 0, 255);
+}*/
 
-// 실제 SSR 제어: PWM 방식을 사용하거나 Time-Proportioning 방식을 사용
-void PID_SSR_Actuator::update()
+void PID_SSR_Actuator::setOutput(int16_t val)
 {
-    // SSR은 반응이 빠르므로 analogWrite(PWM)를 사용할 수 있습니다.
-    // 만약 AC SSR의 특성에 따라 PWM이 불안정하다면 Time-Proportioning 로직으로 변경 가능합니다.
-    int rawValue = (int)_output;
-    if (_activeLow)
-    {
-        analogWrite(_pin, 255 - rawValue);
-    }
-    else
-    {
-        analogWrite(_pin, rawValue);
-    }
+    _output = constrain(val, 0, 255);
 }
 
 void PID_SSR_Actuator::stop()
@@ -34,44 +23,29 @@ void PID_SSR_Actuator::stop()
     update();
 }
 
-int16_t PID_SSR_Actuator::computeIntegerPID(uint16_t target, uint16_t current)
+void PID_SSR_Actuator::update()
 {
-    int32_t error = (int32_t)target - (int32_t)current;
-
-    int32_t pTerm = Kp_int * error;
-
-    static int16_t lastOutput = 0;
-    if (lastOutput < 255 || error < 0)
-    {
-        integral += error;
-    }
-    integral = constrain(integral, -2000, 2000);
-    int32_t iTerm = Ki_int * integral;
-
-    int32_t dTerm = Kd_int * (error - lastError);
-    int32_t total = (pTerm + iTerm + dTerm + 50) / 100;
-
-    lastOutput = (int16_t)constrain(total, 0, 255);
-    lastError = error;
-
-    return lastOutput;
+    // update()는 loop()에서 최대한 자주 호출되어야 합니다.
+    controlHeater((uint16_t)_output);
 }
 
-// PID 결과값이 0~255로 나온다고 가정할 때
-void PID_SSR_Actuator::controlHeater(int pidOutput) {
+void PID_SSR_Actuator::controlHeater(uint16_t pidOutput) {
     static unsigned long windowStartTime = millis();
-    const unsigned long windowSize = 1000; // 1초(1000ms) 주기
+    static bool lastPinState = false; // 이전 출력 상태 저장
 
-    if (millis() - windowStartTime > windowSize) {
-        windowStartTime += windowSize;
+    if (millis() - windowStartTime >= SSR_CONTROL_INTERVAL) {
+        windowStartTime = millis();
     }
 
-    // 255를 1000ms로 매핑하여 켜지는 시간(onTime) 계산
-    unsigned long onTime = map(pidOutput, 0, 255, 0, windowSize);
+    unsigned long onTime = (SSR_CONTROL_INTERVAL * (unsigned long)pidOutput) / 255;
+    bool shouldBeOn = (millis() - windowStartTime < onTime);
 
-    if (onTime > (millis() - windowStartTime)) {
-        digitalWrite(_pin, HIGH);
-    } else {
-        digitalWrite(_pin, LOW);
+    // 실제 핀에 나갈 논리값 결정
+    bool currentPinState = _activeLow ? !shouldBeOn : shouldBeOn;
+
+    // 상태가 변했을 때만 실행
+    if (currentPinState != lastPinState) {
+        digitalWrite(_pin, currentPinState ? HIGH : LOW);
+        lastPinState = currentPinState;
     }
 }

@@ -68,6 +68,13 @@ private:
     void decreaseHumidity();
     void decreaseTurnInterval();
     void decreaseTurnDuration();
+
+    void increasePID_Kp();
+    void increasePID_Ki();
+    void increasePID_Kd();
+    void decreasePID_Kp();
+    void decreasePID_Ki();
+    void decreasePID_Kd();
 };
 
 // Relay On/Off

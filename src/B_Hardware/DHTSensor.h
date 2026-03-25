@@ -13,9 +13,6 @@ private:
     float _lastHumi = -99.0f;
     unsigned long _lastReadTime = 0;
     uint8_t _errorCount = 0;
-    const unsigned long READ_INTERVAL = 3000; // 3 seconds for stability
-
-    void updateAndNotify(EventFlag::Type flag, float &lastValue, float newValue);
 
 public:
     DHTSensor(uint8_t pin) : _dht(pin, DHT_TYPE) {}

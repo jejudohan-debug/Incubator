@@ -1,0 +1,54 @@
+#include <ThreeWire.h>  
+#include <RtcDS1302.h>
+
+// 핀 설정: (IO/DAT, SCLK, CE/RST) -> 이 순서가 매우 중요합니다!
+ThreeWire myWire(11, 12, 10); 
+RtcDS1302<ThreeWire> Rtc(myWire);
+
+void printDateTime(const RtcDateTime& dt) {
+    char datestring[20];
+    snprintf_P(datestring, 
+            countof(datestring),
+            PSTR("%04u/%02u/%02u %02u:%02u:%02u"),
+            dt.Year(), dt.Month(), dt.Day(),
+            dt.Hour(), dt.Minute(), dt.Second());
+    Serial.print("Current Time: ");
+    Serial.print(datestring);
+    Serial.print(" | Unix: ");
+    Serial.println(dt.Unix32Time());
+}
+
+#ifndef countof
+#define countof(a) (sizeof(a) / sizeof(a[0]))
+#endif
+
+void setup() {
+    Serial.begin(9600);
+    Serial.println("DS1302 RTC Test Start");
+
+    Rtc.Begin();
+
+    // 1. 컴파일 시점의 시간 준비
+    RtcDateTime compiled = RtcDateTime(__DATE__, __TIME__);
+    
+    // 2. 쓰기 금지 해제 (DS1302 필수)
+    Rtc.SetIsWriteProtected(false);
+    
+    // 3. 칩 작동 시작
+    Rtc.SetIsRunning(true);
+
+    // 4. 시간 설정 (무조건 컴파일 시간으로 덮어쓰기)
+    Serial.println("Setting RTC time...");
+    Rtc.SetDateTime(compiled);
+}
+
+void loop() {
+    if (!Rtc.IsDateTimeValid()) {
+        Serial.println("RTC Communication Error!");
+    } else {
+        RtcDateTime now = Rtc.GetDateTime();
+        printDateTime(now);
+    }
+
+    delay(1000);
+}

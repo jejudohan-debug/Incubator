@@ -22,6 +22,12 @@ void ConfigEEPROM::init()
         resetSpeciesConfig();
     }
     exportViewConfigValue();
+    if(isViewChanged())
+    {
+        Serial.println(F("ConfigEEPROM::init()-save() 실행"));
+        importViewConfigValue();
+        save();
+    }
 }
 
 void ConfigEEPROM::update() {}
@@ -106,6 +112,14 @@ bool ConfigEEPROM::isViewChanged()
         return true;
     if (_config.selectedSpecies != _view.getSpecies())
         return true;
+    if (_config.pidKp != _view.getPID_Kp()) {
+        return true;
+    }
+    if (_config.pidKi != _view.getPID_Ki()) {
+        return true;
+    }
+    if (_config.pidKd != _view.getPID_Kd())
+        return true;
 
     return false;
 }
@@ -121,6 +135,9 @@ void ConfigEEPROM::importViewConfigValue()
     _config.turnDuration = _view.getTurnDuration();
     _config.incubationStartTime = _view.getStartUnixTime();
     _config.selectedSpecies = _view.getSpecies();
+    _config.pidKp = _view.getPID_Kp();
+    _config.pidKi = _view.getPID_Ki();
+    _config.pidKd = _view.getPID_Kd();
 
     save();
 }
@@ -133,4 +150,9 @@ void ConfigEEPROM::exportViewConfigValue()
     _view.setTurnDuration(_config.turnDuration);
     _view.setStartUnixTime(_config.incubationStartTime);
     _view.setSpecies(_config.selectedSpecies);
+    _view.setPID_Kp(_config.pidKp);
+    _view.setPID_Ki(_config.pidKi);
+    _view.setPID_Kd(_config.pidKd);
+    _view.setPID_Ki(_config.pidKi);
+    _view.setPID_Kd(_config.pidKd);
 }

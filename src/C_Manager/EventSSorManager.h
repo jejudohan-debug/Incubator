@@ -13,8 +13,8 @@ private:
     DisplayState &_view = SystemContext::getInstance().getView();
     ActionQueue &_actionQueue = SystemContext::getInstance().getActionQueue();
 
-    void handleDhtTemp(const float value);
-    void handleDhtHumi(const float value);
+    //void handleDhtTemp(const float value);
+    //void handleDhtHumi(const float value);
 
 public:
     EventSSorManager(DHTSensor &dht);

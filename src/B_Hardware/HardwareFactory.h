@@ -7,7 +7,7 @@
 #include "RTCDevice.h"
 #include "RelayActuator.h"
 // #include "EEPROMDevice.h"
-//  #include "PID_SSR_Actuator.h"
+#include "PID_SSR_Actuator.h"
 
 class HardwareFactory
 {
@@ -25,5 +25,6 @@ public:
     // EEPROMDevice &getEEPROM();
     //  PID_SSR_Actuator &getSSR();
     Button::Group<BUTTON_CNT> &getButtons();
-    RelayActuator::Group<RELAY_CNT> &GetRelays();
+    RelayActuator::Group<RELAY_CNT> &getRelays();
+    PID_SSR_Actuator &getSSR();
 };

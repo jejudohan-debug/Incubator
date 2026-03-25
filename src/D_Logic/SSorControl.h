@@ -18,7 +18,7 @@ public:
 
     void handleAction(SystemAction action);
 
-    void tempStrategy();
+    //void tempStrategy();
     void humiStrategy();
     void checkHeatHealth();
 };

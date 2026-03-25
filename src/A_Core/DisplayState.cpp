@@ -189,7 +189,7 @@ void DisplayState::setCurrentUnixTime(uint32_t val)
         return;
 
     _currentUnixTime = val;
-    // updateField(_currentUnixTime, val, UpdateFlag::TIME);
+    updateFlags |= UpdateFlag::TIME;
     calculateElapsedTime();
 }
 
@@ -231,6 +231,37 @@ uint8_t DisplayState::getElapsedMinute() const
 {
     return _m;
 }
+
+void DisplayState::setPID_Kp(int16_t val)
+{
+    if (val < 0)
+    {
+        val = 0;
+    }
+    updateField(_PID_Kp, val, UpdateFlag::PID_GAIN);
+}
+
+void DisplayState::setPID_Ki(int16_t val)
+{
+    if (val < 0)
+    {
+        val = 0;
+    }
+    updateField(_PID_Ki, val, UpdateFlag::PID_GAIN);
+}
+
+void DisplayState::setPID_Kd(int16_t val)
+{
+    if (val < 0)
+    {
+        val = 0;
+    }
+    updateField(_PID_Kd, val, UpdateFlag::PID_GAIN);
+}
+
+int16_t DisplayState::getPID_Kp() const { return _PID_Kp; }
+int16_t DisplayState::getPID_Ki() const { return _PID_Ki; }
+int16_t DisplayState::getPID_Kd() const { return _PID_Kd; }
 
 /*void DisplayState::importConfigValue(const SystemConfig &cfg)
 {

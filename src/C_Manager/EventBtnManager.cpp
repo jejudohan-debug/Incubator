@@ -32,6 +32,9 @@ void EventBtnManager::onNotify(EventFlag::Type flag, const uint8_t value)
     case EventFlag::BTN_DOWN:
         handleBtnDown(evt);
         break;
+    case EventFlag::LIMIT_SW:
+        handleLimitSw(evt);
+        break;
     default:
         break;
     }
@@ -56,7 +59,7 @@ void EventBtnManager::handleBtnUp(const ButtonEvent evt)
     switch (_view.getPageStep())
     {
     case PageStep::ENV:
-        if (evt == ButtonEvent::PRESS)
+        if (evt == ButtonEvent::PRESS || evt == ButtonEvent::LONG_PRESS)
         {
             _actionQueue.push(SystemAction::TURN_START);
         }
@@ -66,7 +69,7 @@ void EventBtnManager::handleBtnUp(const ButtonEvent evt)
         }
         break;
     case PageStep::CONFIG:
-        if (evt == ButtonEvent::PRESS)
+        if (evt == ButtonEvent::PRESS || evt == ButtonEvent::LONG_PRESS)
         {
             _actionQueue.push(SystemAction::HEATER_START);
         }
@@ -76,7 +79,7 @@ void EventBtnManager::handleBtnUp(const ButtonEvent evt)
         }
         break;
     default:
-        if (evt == ButtonEvent::CLICK)
+        if (evt == ButtonEvent::CLICK || evt == ButtonEvent::LONG_PRESS)
         {
             _actionQueue.push(_operate.getWaiting() ? SystemAction::SAVE_YES : SystemAction::VALUE_UP);
         }
@@ -89,7 +92,7 @@ void EventBtnManager::handleBtnDown(const ButtonEvent evt)
     switch (_view.getPageStep())
     {
     case PageStep::ENV:
-        if (evt == ButtonEvent::PRESS)
+        if (evt == ButtonEvent::PRESS || evt == ButtonEvent::LONG_PRESS)
         {
             _actionQueue.push(SystemAction::FAN_START);
         }
@@ -101,7 +104,7 @@ void EventBtnManager::handleBtnDown(const ButtonEvent evt)
     case PageStep::CONFIG:
         break;
     default:
-        if (evt == ButtonEvent::CLICK)
+        if (evt == ButtonEvent::CLICK || evt == ButtonEvent::LONG_PRESS)
         {
             _actionQueue.push(_operate.getWaiting() ? SystemAction::SAVE_NO : SystemAction::VALUE_DOWN);
         }

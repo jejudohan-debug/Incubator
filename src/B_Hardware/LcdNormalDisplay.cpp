@@ -102,6 +102,7 @@ void LcdNormalDisplay::renderTime()
     printFormatInt(nullptr, _view.getElapsedDay());
     printFormatInt(F("d "), _view.getElapsedHour());
     printFormatInt(F(":"), _view.getElapsedMinute());
+    //printFormatInt(F(":"), _view.getElapsedUnixTime() % 60);
 }
 
 void LcdNormalDisplay::animateProgressBsr()
