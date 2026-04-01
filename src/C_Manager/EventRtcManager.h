@@ -22,10 +22,10 @@ public:
     void update();
 
     void onNotify(EventFlag::Type flag, const uint32_t value) override;
-    void onNotify(EventFlag::Type flag, const SystemConfig& value) override;
+    //void onNotify(EventFlag::Type flag, const SystemConfig& value) override;
 
-    bool isCurrect();
-    void setSpecies(Species s);
-    void setDefultConfig(Species defaultSpecies);
+    //bool isCurrect();
+    //void setSpecies(Species s);
+    //void setDefultConfig(Species defaultSpecies);
     const SystemConfig &getConfig() const { return _config; }
 };

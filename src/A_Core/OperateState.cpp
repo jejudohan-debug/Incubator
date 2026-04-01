@@ -115,28 +115,22 @@ bool OperateState::getAlert() const
     return OperateStateFlag::hasFlag(_operateStateFlag, OperateStateFlag::ALERT);
 }
 
-/*void OperateState::setNeedSave(bool val)
+/*void OperateState::setAutoTune(bool val)
 {
-    if (getNeedSave() == val)
-        return;
-
-    setOperateFlag(OperateStateFlag::NEED_SAVE, val);
+    setOperateFlag(OperateStateFlag::AUTOTUNE, val);
 }
 
-bool OperateState::getNeedSave() const
+bool OperateState::getAutoTune() const
 {
-    return OperateStateFlag::hasFlag(_operateStateFlag, OperateStateFlag::NEED_SAVE);
+    return OperateStateFlag::hasFlag(_operateStateFlag, OperateStateFlag::AUTOTUNE);
 }
 
-void OperateState::setNeedLoad(bool val)
+void OperateState::setAutoTuneWait(bool val)
 {
-    if (getNeedLoad() == val)
-        return;
-
-    setOperateFlag(OperateStateFlag::NEED_LOAD, val);
+    setOperateFlag(OperateStateFlag::AUTOTUNEWAIT, val);
 }
 
-bool OperateState::getNeedLoad() const
+bool OperateState::getAutoTuneWait() const
 {
-    return OperateStateFlag::hasFlag(_operateStateFlag, OperateStateFlag::NEED_LOAD);
+    return OperateStateFlag::hasFlag(_operateStateFlag, OperateStateFlag::AUTOTUNEWAIT);
 }*/

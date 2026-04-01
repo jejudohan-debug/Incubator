@@ -33,4 +33,9 @@ public:
     bool getWaiting() const;
     void setAlert(bool val);
     bool getAlert() const;
+
+    /*void setAutoTune(bool val);
+    bool getAutoTune() const;
+    void setAutoTuneWait(bool val);
+    bool getAutoTuneWait() const;*/
 };

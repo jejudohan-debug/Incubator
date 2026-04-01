@@ -16,7 +16,7 @@ private:
     static const IncreaseFunc _increaseMap[];
     static const DecreaseFunc _decreaseMap[];
 
-    //ConfigRtcStorage &_cfgRtcStor;
+    // ConfigRtcStorage &_cfgRtcStor;
     ConfigEEPROM &_cfgEEPROM;
 
     DisplayState &_view = SystemContext::getInstance().getView();
@@ -33,6 +33,9 @@ private:
     // void waitConfirm();
     void saveYes();
     void saveNo();
+    // void autoTune();
+    // void autoTuneYes();
+    // void autoTuneNo();
 
     void increaseValue();
     void decreaseValue();

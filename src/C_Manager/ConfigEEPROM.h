@@ -4,7 +4,7 @@
 #include "A_Core/SystemContext.h"
 #include "A_Core/Interfaces.h"
 
-class ConfigEEPROM : public Subject
+class ConfigEEPROM //: public Subject
 {
 private:
     static constexpr uint16_t MAGIC_SIG = 0xABCD;

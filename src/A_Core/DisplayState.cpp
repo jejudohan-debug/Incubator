@@ -263,23 +263,13 @@ int16_t DisplayState::getPID_Kp() const { return _PID_Kp; }
 int16_t DisplayState::getPID_Ki() const { return _PID_Ki; }
 int16_t DisplayState::getPID_Kd() const { return _PID_Kd; }
 
-/*void DisplayState::importConfigValue(const SystemConfig &cfg)
+
+void DisplayState::setAutotuneCycle(int val)
 {
-    _targetTemp = cfg.targetTemp;
-    _targetHumi = cfg.targetHumi;
-    _turnInterval = cfg.turnInterval;
-    _turnDuration = cfg.turnDuration;
-    _species = static_cast<Species>(cfg.selectedSpecies);
-    _startUnixTime = cfg.incubationStartTime;
-}*/
+    _autoTuneCycle = val;
+}
 
-/* void SystemManager::onSpeciesChanged(Species newSpecies) {
-    auto& state = SystemContext::getInstance().getView();
-
-    // 1. 상태 객체의 종 정보를 먼저 변경
-    state.setSpecies(newSpecies);
-
-    // 2. 종에 따른 목표 온도/습도 자동 설정 (Manager의 역할)
-    switch(newSpecies) {
-    }
-}*/
+int DisplayState::getAutotuneCycle() const
+{
+    return _autoTuneCycle;
+}

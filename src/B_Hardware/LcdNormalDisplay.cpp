@@ -4,7 +4,7 @@
 const uint8_t BAR_BLOCK_COUNT = 6;
 const uint8_t PIXELS_PER_BLOCK = 5;
 const uint8_t BAR_START_COL = 9;
-//const uint8_t TOTAL_DAYS = 21;
+// const uint8_t TOTAL_DAYS = 21;
 
 void LcdNormalDisplay::printFormatInt(const __FlashStringHelper *label, int value)
 {
@@ -46,8 +46,9 @@ void LcdNormalDisplay::printFormatUint16(const __FlashStringHelper *label, uint1
 
 void LcdNormalDisplay::update()
 {
-    if (_view.getPageStep() == PageStep::ENV)
+    switch (_view.getPageStep())
     {
+    case PageStep::ENV:
         if (_view.updateFlags)
         {
             renderEnv();
@@ -55,13 +56,21 @@ void LcdNormalDisplay::update()
             renderTime();
         }
         animateProgressBsr();
-    }
-    else
-    {
+        break;
+    case PageStep::CONFIG:
         if (_view.updateFlags)
         {
             renderConfig();
         }
+        break;
+    /*case PageStep::AUTOTUNING:
+        if (_view.updateFlags)
+        {
+            renderAutoTune();
+        }
+        break;*/
+    default:
+        break;
     }
 }
 
@@ -75,9 +84,38 @@ void LcdNormalDisplay::renderConfig()
     renderRelay();
 
     _lcd.setCursor(0, 1);
-     printFormatUint16(F("Hatch Humi:"), (int)profile.hatchHumi);
+    printFormatUint16(F("Hatch Humi:"), (int)profile.hatchHumi);
     _lcd.write('%');
 }
+
+/*void LcdNormalDisplay::renderAutoTune()
+{
+    if (_operate.getAutoTune())
+    {
+        _lcd.setCursor(0, 0);
+        _lcd.print(F("[Auto Tuning]..."));
+        _lcd.setCursor(0,1);
+        printFormatUint16(F("Current: "), _view.getCurrentTempFixed());
+        _lcd.write(223);
+        _lcd.print(F("C "));
+    }
+    else
+    {
+        _lcd.setCursor(0, 0);
+        if (_operate.getAutoTuneWait())
+        {
+            _lcd.print(F("Sure? UP:Y DN:N "));
+        }
+        else
+        {
+            _lcd.print(F("[Auto Tune] UP:Y"));
+        }
+        _lcd.setCursor(0, 1);
+        printFormatUint16(F("Target: "), _view.getTargetTempFixed());
+        _lcd.write(223);
+        _lcd.print(F("C  "));
+    }
+}*/
 
 void LcdNormalDisplay::renderEnv()
 {
@@ -89,7 +127,7 @@ void LcdNormalDisplay::renderEnv()
 }
 
 void LcdNormalDisplay::renderRelay()
-{  
+{
     _lcd.setCursor(13, 0);
     _lcd.write(_operate.getRelayHeat() ? 'H' : ' ');
     _lcd.write(_operate.getRelayFan() ? 'F' : ' ');
@@ -102,7 +140,7 @@ void LcdNormalDisplay::renderTime()
     printFormatInt(nullptr, _view.getElapsedDay());
     printFormatInt(F("d "), _view.getElapsedHour());
     printFormatInt(F(":"), _view.getElapsedMinute());
-    //printFormatInt(F(":"), _view.getElapsedUnixTime() % 60);
+    // printFormatInt(F(":"), _view.getElapsedUnixTime() % 60);
 }
 
 void LcdNormalDisplay::animateProgressBsr()
@@ -114,7 +152,7 @@ void LcdNormalDisplay::animateProgressBsr()
     static uint8_t _targetPixels = 0;
     const unsigned long ANIM_INTERVAL = 500; // 0.5초마다 애니메이션 업데이트
 
-    auto& speciesCtx = SystemContext::getInstance().getSpeciesContext();
+    auto &speciesCtx = SystemContext::getInstance().getSpeciesContext();
     Species currentSpecies = _view.getSpecies();
     uint8_t totalDays = speciesCtx.getTotalDays(currentSpecies);
 

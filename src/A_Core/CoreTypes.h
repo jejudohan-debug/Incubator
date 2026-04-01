@@ -53,7 +53,10 @@ enum class SystemAction : uint8_t
     // CONFIRM,    // 확인
     SAVE_YES, // 10: 저장 확인: 예
     SAVE_NO,  // 11: 저장 확인: 아니오
-    BUTTON_LAST = SAVE_NO,
+    AUTOTUNE,
+    AUTOTUNE_YES,
+    AUTOTUNE_NO,
+    BUTTON_LAST = AUTOTUNE_NO,
     // --- DHT ---
     TEMP_CHANGE,
     HUMI_CHANGE,
@@ -75,6 +78,7 @@ enum class PageStep : uint8_t
 {
     ENV = 0,
     CONFIG,
+    // AUTOTUNING,
     SPECIES,
     SETUP_FIRST = SPECIES,
     DAY,
@@ -112,7 +116,7 @@ struct SpeciesProfile
 
 namespace EventFlag
 {
-    using Type = uint16_t;
+    using Type = uint8_t;
 
     const Type NONE = 0;
     const Type BTN_SELECT = 1 << 0;
@@ -122,12 +126,12 @@ namespace EventFlag
     const Type DHT_TEMP = 1 << 4;
     const Type DHT_HUMI = 1 << 5;
     const Type RTC_TIME = 1 << 6;
-    const Type RTC_LOAD = 1 << 7;
+    // const Type RTC_LOAD = 1 << 7;
 
-    const Type RTC_SAVE = 1 << 8;
-    const Type RELAY_ON_DONE = 1 << 9;
-    const Type RELAY_OFF_DONE = 1 << 10;
-    const Type RELAY_ERROR = 1 << 11;
+    // const Type RTC_SAVE = 1 << 8;
+    // const Type RELAY_ON_DONE = 1 << 9;
+    // const Type RELAY_OFF_DONE = 1 << 10;
+    // const Type RELAY_ERROR = 1 << 11;
     const Type ALL = 0xFF;
 
     inline bool hasFlag(Type source, Type target)
@@ -166,6 +170,8 @@ namespace OperateStateFlag
 
     const Type WAITING = 1 << 6;
     const Type ALERT = 1 << 7;
+    // const Type AUTOTUNE = 1 << 8;
+    // const Type AUTOTUNEWAIT = 1 << 9;
     const Type ALL = 0xFF;
 
     inline bool hasFlag(Type source, Type target)
@@ -192,6 +198,7 @@ namespace UpdateFlag
     // 6. 설정 데이터 처리 (EEPROM Load/Save)
     const Type CONFIG_EVENT = 1 << 8;
     const Type PID_GAIN = 1 << 9;
+    // const Type AUTOTUNE = 1 << 10;
 
     const Type ALL = 0xFFFF; // 16비트 전체 갱신
 

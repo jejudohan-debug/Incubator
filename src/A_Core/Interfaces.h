@@ -12,7 +12,7 @@ public:
     virtual void onNotify(EventFlag::Type flag, const float value) {}
     virtual void onNotify(EventFlag::Type flag, const uint8_t value) {}
     virtual void onNotify(EventFlag::Type flag, const uint32_t value) {}
-    virtual void onNotify(EventFlag::Type flag, const SystemConfig& value) {} // Config Load & Save
+    //virtual void onNotify(EventFlag::Type flag, const SystemConfig& value) {} // Config Load & Save
 };
 
 class Subject

@@ -35,4 +35,5 @@ private:
     // void renderProgressBar();
     void animateProgressBsr();
     void drawProgressBar(uint8_t filledPixels, uint8_t maxPixels);
+    // void renderAutoTune();
 };

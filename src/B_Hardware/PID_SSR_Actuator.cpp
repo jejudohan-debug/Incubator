@@ -14,7 +14,8 @@ void PID_SSR_Actuator::setOutput(double val)
 
 void PID_SSR_Actuator::setOutput(int16_t val)
 {
-    _output = constrain(val, 0, 255);
+    //_output = constrain(val, 0, 255);
+    _output = val;
 }
 
 void PID_SSR_Actuator::stop()
@@ -35,10 +36,12 @@ void PID_SSR_Actuator::controlHeater(uint16_t pidOutput) {
 
     if (millis() - windowStartTime >= SSR_CONTROL_INTERVAL) {
         windowStartTime = millis();
+        //Serial.print(F("PID_SSR_Actuator::controlHeater: "));
+        //Serial.println(pidOutput);
     }
 
-    unsigned long onTime = (SSR_CONTROL_INTERVAL * (unsigned long)pidOutput) / 255;
-    bool shouldBeOn = (millis() - windowStartTime < onTime);
+    //unsigned long onTime = (SSR_CONTROL_INTERVAL * (unsigned long)pidOutput) / 255;
+    bool shouldBeOn = (millis() - windowStartTime < pidOutput);
 
     // 실제 핀에 나갈 논리값 결정
     bool currentPinState = _activeLow ? !shouldBeOn : shouldBeOn;

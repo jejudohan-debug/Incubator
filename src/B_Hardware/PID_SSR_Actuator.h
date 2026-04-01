@@ -8,11 +8,7 @@ class PID_SSR_Actuator
 private:
   uint8_t _pin;
   bool _activeLow;
-  uint8_t _output; // PID로부터 전달받을 0~255 사이의 값
-
-  //int16_t Kp_int = 50; // 실제 Kp가 5.0라면 5.0 * 10 = 50
-  //int16_t Ki_int = 1;  // 실제 Ki가 0.1이라면 0.1 * 10 = 1
-  //int16_t Kd_int = 5;  // 실제 Kd가 1.0이라면 1.0 * 10 = 10
+  uint16_t _output; // PID로부터 전달받을 0~1000 사이의 값
 
   DisplayState &_view = SystemContext::getInstance().getView();
 

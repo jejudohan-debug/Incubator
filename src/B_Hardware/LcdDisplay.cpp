@@ -16,7 +16,7 @@ void LcdDisplay::init()
 void LcdDisplay::setupCustomChars()
 {
     // 1. 데이터 정의 (Flash 메모리에 저장하여 RAM 절약)
-    const uint8_t barChars[7][8] = {
+    static const uint8_t barChars[7][8] PROGMEM = {
         {0x1F, 0x1F, 0x00, 0x00, 0x00, 0x00, 0x1F, 0x1F}, // 0: 빈 레일 [=]
         {0x1F, 0x1F, 0x01, 0x01, 0x01, 0x01, 0x1F, 0x1F}, // 1: 1픽셀
         {0x1F, 0x1F, 0x03, 0x03, 0x03, 0x03, 0x1F, 0x1F}, // 2: 2픽셀
@@ -28,7 +28,11 @@ void LcdDisplay::setupCustomChars()
 
     for (int i = 0; i < 7; i++)
     {
-        _lcd.createChar(i, (uint8_t *)barChars[i]);
+        uint8_t charData[8];
+        for (int j = 0; j < 8; j++) {
+            charData[j] = pgm_read_byte(&(barChars[i][j]));
+        }
+        _lcd.createChar(i, charData);
     }
 }
 
@@ -48,7 +52,8 @@ void LcdDisplay::update()
         _lcd.clear();
     }
 
-    if ((_view.getPageStep() == PageStep::ENV) || (_view.getPageStep() == PageStep::CONFIG))
+    PageStep p = _view.getPageStep();
+    if ((p == PageStep::ENV) || (p == PageStep::CONFIG)) // || p == PageStep::AUTOTUNING)
     {
         _normalDisplay.update();
     }

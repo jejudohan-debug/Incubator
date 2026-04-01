@@ -55,7 +55,7 @@ bool ConfigEEPROM::load()
         return false;
 
     _config = tempCfg;
-    notify(EventFlag::RTC_LOAD, _config);
+    //notify(EventFlag::RTC_LOAD, _config);
 
     return true;
 }
@@ -69,7 +69,7 @@ void ConfigEEPROM::save()
 
     EEPROM.put(CONFIG_ADDR, _config);
 
-    notify(EventFlag::RTC_SAVE, _config);
+    //notify(EventFlag::RTC_SAVE, _config);
 }
 
 // 3. 특정 종 선택 시 설정값 동기화

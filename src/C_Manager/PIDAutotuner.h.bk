@@ -1,0 +1,96 @@
+#pragma once
+#include <Arduino.h>
+
+class PIDAutotuner {
+private:
+    float _targetTemp;
+    long _startTime;
+    int _cycles = 0;
+    bool _isHeaterOn = false;
+    
+    int32_t _tMax = -32768, _tMin = 32767; // 진폭 측정용
+    unsigned long _lastSwitchTime = 0;
+    unsigned long _periodSum = 0;
+
+public:
+    bool isComplete = false;
+    bool isStarted = false;
+    int32_t Kp, Ki, Kd;
+
+    int getCycles() { return _cycles; }
+    
+    void start(float target) {
+        _targetTemp = target;
+        _cycles = 0;
+        _isHeaterOn = true;
+        isComplete = false;
+        isStarted = true;
+
+        _tMax = -32768; 
+        _tMin = 32767;
+        _lastSwitchTime = 0;
+        _periodSum = 0;
+
+        Serial.println(F("=== PID Autotune Started ==="));
+        Serial.print(F("Target: ")); Serial.println(_targetTemp);
+    }
+
+    int16_t update(int32_t currentTemp) {
+        if (isComplete) return 0;
+
+        // 1. 릴레이 제어 (임계 진동 유도)
+        if (_isHeaterOn && currentTemp > (_targetTemp + 2)) { // 살짝 위에서 끔
+            _isHeaterOn = false;
+            //_updateCycle(currentTemp);
+            unsigned long now = millis();
+            if (_lastSwitchTime != 0) _periodSum += (now - _lastSwitchTime);
+            _lastSwitchTime = now;
+            
+            Serial.println(F(">> Heater OFF (Peak reached)"));
+        } else if (!_isHeaterOn && currentTemp < (_targetTemp - 2)) { // 살짝 아래서 켬
+            _isHeaterOn = true;
+
+            unsigned long now = millis();
+            if (_lastSwitchTime != 0) _periodSum += (now - _lastSwitchTime);
+            _lastSwitchTime = now;
+
+            _cycles++; // 여기서 사이클을 올립니다.
+            Serial.print(F(">> Cycle ")); Serial.print(_cycles);
+            Serial.print(F(" Finished. Duration: ")); Serial.print((now - _lastSwitchTime) / 1000.0);
+            Serial.print(F("s | Max: ")); Serial.print(_tMax);
+            Serial.print(F(" | Min: ")); Serial.println(_tMin);
+
+            if (_cycles >= 3) _calculateParameters();
+        }
+
+        // 진폭 기록은 계속 유지
+        if (currentTemp > _tMax) _tMax = currentTemp;
+        if (currentTemp < _tMin) _tMin = currentTemp;
+
+        return _isHeaterOn ? 1000 : 0;
+    }
+
+    void _calculateParameters() {
+        int32_t a = (_tMax - _tMin) / 2; // 진폭
+        unsigned long Tu = (_periodSum / (_cycles - 1)) / 1000; // 주기(초)
+        
+        // Ku 계산 (4 * 1000 * 10 / pi * a)
+        int32_t Ku = 12732L / a; 
+        
+        // Ziegler-Nichols (10배 정수형)
+        Kp = (6 * Ku) / 10;
+        Ki = (12 * Ku) / (10 * Tu);
+        Kd = (75 * Ku * Tu) / 1000;
+
+        Serial.println(F("--- Tuning Results ---"));
+        Serial.print(F("Amplitude (a): ")); Serial.println(a);
+        Serial.print(F("Period (Tu): ")); Serial.print(Tu); Serial.println(F("s"));
+        Serial.print(F("Ku: ")); Serial.println(Ku);
+        Serial.print(F("Final Kp: ")); Serial.println(Kp);
+        Serial.print(F("Final Ki: ")); Serial.println(Ki);
+        Serial.print(F("Final Kd: ")); Serial.println(Kd);
+        Serial.println(F("======================"));
+
+        isComplete = true;
+    }
+};

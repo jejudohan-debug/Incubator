@@ -24,6 +24,8 @@ void RtcControl::handleAction(SystemAction action)
     case SystemAction::CFG_LOAD:
         break;
     case SystemAction::CFG_SAVE:
+        _cfgEEPROM.importViewConfigValue();
+        _cfgEEPROM.save();
         break;
     default:
         break;
@@ -56,7 +58,7 @@ void RtcControl::turnStrategy()
 
     // [핵심] 주기가 시작된 직후 2초 동안은 스위치가 눌려도 무시 (Effective Limit 계산)
     // 모터가 확실히 스위치 범위를 벗어날 시간을 벌어줍니다.
-    bool ignoreLimit = (eTime < 2);
+    bool ignoreLimit = (eTime < 4);
     bool currentLimit = ignoreLimit ? false : _isLimitReached;
 
     bool shouldTurn = timeToTurn && !currentLimit;

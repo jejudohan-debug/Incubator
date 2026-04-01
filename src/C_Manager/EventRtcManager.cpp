@@ -26,11 +26,11 @@ void EventRtcManager::onNotify(EventFlag::Type flag, const uint32_t value)
     _actionQueue.push(SystemAction::TIME_CHANGE);
 }
 
-void EventRtcManager::onNotify(EventFlag::Type flag, const SystemConfig& value)
+/*void EventRtcManager::onNotify(EventFlag::Type flag, const SystemConfig& value)
 {
     if (flag == EventFlag::RTC_LOAD) {
         _actionQueue.push(SystemAction::CFG_LOAD);
     } else if (flag == EventFlag::RTC_SAVE) {
         _actionQueue.push(SystemAction::CFG_SAVE);
     }
-}
+}*/

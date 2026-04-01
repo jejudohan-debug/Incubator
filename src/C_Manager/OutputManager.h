@@ -5,6 +5,7 @@
 #include "B_Hardware/HardwarePins.h"
 #include "B_Hardware/RelayActuator.h"
 #include "B_Hardware/PID_SSR_Actuator.h"
+//#include "PIDAutotuner.h"
 
 enum RelayIdx
 {
@@ -19,6 +20,7 @@ class OutputManager
 private:
     RelayActuator::Group<RELAY_CNT> &_relays;
     PID_SSR_Actuator _ssr;
+    //PIDAutotuner _autotuner;
 
     struct RelayMap
     {
@@ -33,12 +35,14 @@ private:
 
     DisplayState &_view = SystemContext::getInstance().getView();
     OperateState &_operate = SystemContext::getInstance().getOperate();
+    ActionQueue &_actionQueue = SystemContext::getInstance().getActionQueue();
 
         // PID 계산
     int32_t integral = 0;
     int32_t lastError = 0;
 
     int16_t computeIntegerPID();
+    //int16_t autoTunePID();
 
 public:
     OutputManager(RelayActuator::Group<RELAY_CNT> &relays, PID_SSR_Actuator &ssr)

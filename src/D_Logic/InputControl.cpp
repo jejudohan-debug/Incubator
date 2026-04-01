@@ -11,7 +11,11 @@ const InputControl::ActionFunc InputControl::_actionMap[] PROGMEM = {
     &InputControl::increaseValue,
     &InputControl::decreaseValue, // 8
     &InputControl::saveYes,
-    &InputControl::saveNo};
+    &InputControl::saveNo,
+    //&InputControl::autoTune,
+    //&InputControl::autoTuneYes,
+    //&InputControl::autoTuneNo
+};
 
 const InputControl::IncreaseFunc InputControl::_increaseMap[] PROGMEM = {
     &InputControl::increaseSpecies,
@@ -24,8 +28,7 @@ const InputControl::IncreaseFunc InputControl::_increaseMap[] PROGMEM = {
     &InputControl::increaseTurnDuration,
     &InputControl::increasePID_Kp,
     &InputControl::increasePID_Ki,
-    &InputControl::increasePID_Kd
-};
+    &InputControl::increasePID_Kd};
 
 const InputControl::DecreaseFunc InputControl::_decreaseMap[] PROGMEM = {
     &InputControl::decreaseSpecies,
@@ -38,8 +41,7 @@ const InputControl::DecreaseFunc InputControl::_decreaseMap[] PROGMEM = {
     &InputControl::decreaseTurnDuration,
     &InputControl::decreasePID_Kp,
     &InputControl::decreasePID_Ki,
-    &InputControl::decreasePID_Kd
-};
+    &InputControl::decreasePID_Kd};
 
 void InputControl::handleAction(SystemAction action)
 {
@@ -111,6 +113,12 @@ void InputControl::moveToNextStep()
 // SAVE_YES,   // 저장 확인: 예
 void InputControl::saveYes()
 {
+    /*if (_operate.getAutoTune())
+    {
+        _operate.setAutoTune(true);
+        return;
+    }*/
+
     if (_cfgEEPROM.getSpecies() != _view.getSpecies())
     {
         _cfgEEPROM.resetSpeciesConfig(_view.getSpecies());
@@ -131,6 +139,26 @@ void InputControl::saveNo()
     _operate.setWaiting(false);
     moveToNextStep();
 }
+
+/*void InputControl::autoTune()
+{
+    _operate.setAutoTuneWait(true);
+    _view.updateRelayFlag(UpdateFlag::AUTOTUNE);
+}
+
+void InputControl::autoTuneYes()
+{
+    _operate.setAutoTuneWait(false);
+    _operate.setAutoTune(true);
+    _view.updateRelayFlag(UpdateFlag::AUTOTUNE);
+}
+
+void InputControl::autoTuneNo()
+{
+    _operate.setAutoTuneWait(false);
+    _operate.setAutoTune(false);
+    _view.updateRelayFlag(UpdateFlag::AUTOTUNE);
+}*/
 
 void InputControl::startHeat()
 {
@@ -262,28 +290,28 @@ void InputControl::decreaseMinute()
 // TARGET_TEMP, TARGET_HUMI, TURNINTERVAL
 void InputControl::increaseTemperature()
 {
-    uint16_t next = _view.getTargetTempFixed() + 2;
+    uint16_t next = _view.getTargetTempFixed() + 1;
     if (next <= 450)
         _view.setTargetTemp(next);
 }
 
 void InputControl::decreaseTemperature()
 {
-    uint16_t next = _view.getTargetTempFixed() - 2;
+    uint16_t next = _view.getTargetTempFixed() - 1;
     if (next > 200)
         _view.setTargetTemp(next);
 }
 
 void InputControl::increaseHumidity()
 {
-    uint16_t next = _view.getTargetHumiFixed() + 10;
+    uint16_t next = _view.getTargetHumiFixed() + 1;
     if (next <= 999)
         _view.setTargetHumi(next);
 }
 
 void InputControl::decreaseHumidity()
 {
-    uint16_t next = _view.getTargetHumiFixed() - 10;
+    uint16_t next = _view.getTargetHumiFixed() - 1;
     if (next > 0)
         _view.setTargetHumi(next);
 }
@@ -343,7 +371,7 @@ void InputControl::decreaseTurnDuration()
 void InputControl::increasePID_Kp()
 {
     int16_t current = _view.getPID_Kp();
-    if (current < 999) 
+    if (current < 32760)
     {
         _view.setPID_Kp(current + 1);
     }
@@ -361,7 +389,7 @@ void InputControl::decreasePID_Kp()
 void InputControl::increasePID_Ki()
 {
     int16_t current = _view.getPID_Ki();
-    if (current < 999) 
+    if (current < 32760)
     {
         _view.setPID_Ki(current + 1);
     }
@@ -379,7 +407,7 @@ void InputControl::decreasePID_Ki()
 void InputControl::increasePID_Kd()
 {
     int16_t current = _view.getPID_Kd();
-    if (current < 999) 
+    if (current < 32760)
     {
         _view.setPID_Kd(current + 1);
     }
@@ -393,7 +421,6 @@ void InputControl::decreasePID_Kd()
         _view.setPID_Kd(current - 1);
     }
 }
-
 
 /* / CONFIRM,    // 확인
 void InputControl::waitConfirm()

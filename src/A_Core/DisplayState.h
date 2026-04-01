@@ -18,7 +18,8 @@ private:
     uint32_t _startUnixTime = 0;   // 초 단위
     uint8_t _d = 0, _h = 0, _m = 0;
     int16_t _PID_Kp = 200, _PID_Ki = 5, _PID_Kd = 20;    // PID 인수
-    
+    int _autoTuneCycle = 0;
+
     template <typename T>
     void updateField(T &field, T newValue, UpdateFlag::Type flag);
 
@@ -103,6 +104,9 @@ public:
     int16_t getPID_Kp() const;
     int16_t getPID_Ki() const;
     int16_t getPID_Kd() const;
+
+    void setAutotuneCycle(int val);
+    int getAutotuneCycle() const;
     
     /*template <typename SetterFunc>
     void InputControl::updateActionState(
