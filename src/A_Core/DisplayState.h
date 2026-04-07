@@ -17,11 +17,14 @@ private:
     uint32_t _currentUnixTime = 0; // 초 단위
     uint32_t _startUnixTime = 0;   // 초 단위
     uint8_t _d = 0, _h = 0, _m = 0;
-    int16_t _PID_Kp = 200, _PID_Ki = 5, _PID_Kd = 20;    // PID 인수
+    uint16_t _PID_Kp = 2000, _PID_Ki = 15, _PID_Kd = 500;    // PID 인수
     int _autoTuneCycle = 0;
 
     template <typename T>
     void updateField(T &field, T newValue, UpdateFlag::Type flag);
+    
+    template <typename T>
+    void updateFieldClamped(T &field, T newValue, T minVal, T maxVal, UpdateFlag::Type flag);
 
     template <typename T>
     void updateValue(
@@ -40,6 +43,11 @@ public:
     DisplayState &operator=(const DisplayState &) = delete;
     // 방지: DisplayState myView = SystemContext::getInstance().getView();
 
+    inline bool hasUpdateFlag(UpdateFlag::Type flag) const
+    {
+        return UpdateFlag::hasFlag(updateFlags, flag);
+    }
+
     inline uint16_t floatToFixed(float val) const
     {
         return (uint16_t)(val * 10.0f + 0.5f);
@@ -52,24 +60,16 @@ public:
 
     void uint16ToString(char *buf, uint16_t value);
 
-    void setCurrentTemp(float val);
-    void setCurrentTemp(uint16_t val);
-    float getCurrentTempFloat() const;
+    void setCurrentTempFixed(uint16_t val);
     uint16_t getCurrentTempFixed() const;
 
-    void setCurrentHumi(float val);
-    void setCurrentHumi(uint16_t val);
-    float getCurrentHumiFloat() const;
+    void setCurrentHumiFixed(uint16_t val);
     uint16_t getCurrentHumiFixed() const;
 
-    void setTargetTemp(float val);
-    void setTargetTemp(uint16_t val);
-    float getTargetTempFloat() const;
+    void setTargetTempFixed(uint16_t val);
     uint16_t getTargetTempFixed() const;
 
-    void setTargetHumi(float val);
-    void setTargetHumi(uint16_t val);
-    float getTargetHumiFloat() const;
+    void setTargetHumiFixed(uint16_t val);
     uint16_t getTargetHumiFixed() const;
 
     void setTurnInterval(uint16_t val);
@@ -98,12 +98,12 @@ public:
     void updateRelayFlag(UpdateFlag::Type flag);
     bool getRelayFlag(UpdateFlag::Type flag);
 
-    void setPID_Kp(int16_t val);
-    void setPID_Ki(int16_t val);
-    void setPID_Kd(int16_t val);
-    int16_t getPID_Kp() const;
-    int16_t getPID_Ki() const;
-    int16_t getPID_Kd() const;
+    void setPID_Kp(uint16_t val);
+    void setPID_Ki(uint16_t val);
+    void setPID_Kd(uint16_t val);
+    uint16_t getPID_Kp() const;
+    uint16_t getPID_Ki() const;
+    uint16_t getPID_Kd() const;
 
     void setAutotuneCycle(int val);
     int getAutotuneCycle() const;

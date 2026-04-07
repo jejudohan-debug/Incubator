@@ -8,6 +8,8 @@ const InputControl::ActionFunc InputControl::_actionMap[] PROGMEM = {
     &InputControl::stopFan,
     &InputControl::startTurn, // 5
     &InputControl::stopTurn,
+    &InputControl::startHumi,
+    &InputControl::stopHumi,
     &InputControl::increaseValue,
     &InputControl::decreaseValue, // 8
     &InputControl::saveYes,
@@ -43,52 +45,53 @@ const InputControl::DecreaseFunc InputControl::_decreaseMap[] PROGMEM = {
     &InputControl::decreasePID_Ki,
     &InputControl::decreasePID_Kd};
 
+void InputControl::calcBaseStep()
+{
+    uint32_t now = millis();
+    if (now - _lastActionTime > 500)
+    {
+        _repeatCount = 0;
+        _baseStep = 1;
+    }
+    else
+    {
+        _repeatCount++;
+        _baseStep = 1 + (_repeatCount / 5) * (_repeatCount / 5);
+        if (_baseStep > 100)
+            _baseStep = 100; // 최대 제한
+    }
+    _lastActionTime = now;
+}
+
+#define CALL_MAP_FUNC(Map, Index, Type)                            \
+    if (Index >= 0 && Index < (int)(sizeof(Map) / sizeof(Map[0]))) \
+    {                                                              \
+        Type handler;                                              \
+        memcpy_P(&handler, &Map[Index], sizeof(Type));             \
+        if (handler)                                               \
+            (this->*handler)();                                    \
+    }
+
 void InputControl::handleAction(SystemAction action)
 {
     int index = action - SystemAction::BUTTON_FIRST;
-    const int mapSize = sizeof(_actionMap) / sizeof(_actionMap[0]);
-
-    if (index >= 0 && index < mapSize)
-    {
-        ActionFunc handler;
-        memcpy_P(&handler, &_actionMap[index], sizeof(ActionFunc));
-        if (handler != nullptr)
-        {
-            (this->*handler)();
-        }
-    }
+    CALL_MAP_FUNC(_actionMap, index, ActionFunc);
 }
 
 // --- VALUE_UP,   // 수치 증가 (UP Click) ---
 void InputControl::increaseValue()
 {
+    calcBaseStep();
     int index = _view.getPageStep() - PageStep::SETUP_FIRST;
-    const int mapSize = sizeof(_increaseMap) / sizeof(_increaseMap[0]);
-    if (index >= 0 && index < mapSize)
-    {
-        IncreaseFunc handler;
-        memcpy_P(&handler, &_increaseMap[index], sizeof(IncreaseFunc));
-        if (handler != nullptr)
-        {
-            (this->*handler)();
-        }
-    }
+    CALL_MAP_FUNC(_increaseMap, index, IncreaseFunc);
 }
 
 // --- VALUE_DOWN, // 수치 감소 (DOWN Click) ---
 void InputControl::decreaseValue()
 {
+    calcBaseStep();
     int index = _view.getPageStep() - PageStep::SETUP_FIRST;
-    const int mapSize = sizeof(_decreaseMap) / sizeof(_decreaseMap[0]);
-    if (index >= 0 && index < mapSize)
-    {
-        DecreaseFunc handler;
-        memcpy_P(&handler, &_decreaseMap[index], sizeof(DecreaseFunc));
-        if (handler != nullptr)
-        {
-            (this->*handler)();
-        }
-    }
+    CALL_MAP_FUNC(_decreaseMap, index, DecreaseFunc);
 }
 
 // MOVE_NEXT,  // 다음 단계 (SELECT Click)
@@ -140,66 +143,24 @@ void InputControl::saveNo()
     moveToNextStep();
 }
 
-/*void InputControl::autoTune()
-{
-    _operate.setAutoTuneWait(true);
-    _view.updateRelayFlag(UpdateFlag::AUTOTUNE);
-}
+#define DEFINE_MANUAL_CONTROL(Name, Flag)        \
+    void InputControl::start##Name()             \
+    {                                            \
+        _operate.setManual##Name(true);          \
+        _operate.setRelay##Name(true);           \
+        _view.updateRelayFlag(UpdateFlag::Flag); \
+    }                                            \
+    void InputControl::stop##Name()              \
+    {                                            \
+        _operate.setManual##Name(false);         \
+        _operate.setRelay##Name(false);          \
+        _view.updateRelayFlag(UpdateFlag::Flag); \
+    }
 
-void InputControl::autoTuneYes()
-{
-    _operate.setAutoTuneWait(false);
-    _operate.setAutoTune(true);
-    _view.updateRelayFlag(UpdateFlag::AUTOTUNE);
-}
-
-void InputControl::autoTuneNo()
-{
-    _operate.setAutoTuneWait(false);
-    _operate.setAutoTune(false);
-    _view.updateRelayFlag(UpdateFlag::AUTOTUNE);
-}*/
-
-void InputControl::startHeat()
-{
-    _operate.setManualHeat(true);
-    _view.updateRelayFlag(UpdateFlag::RELAY_HEAT);
-}
-
-// HEATER_STOP,  // 모터 수동 정지
-void InputControl::stopHeat()
-{
-    _operate.setManualHeat(false);
-    _view.updateRelayFlag(UpdateFlag::RELAY_HEAT);
-}
-
-// FAN_START,
-void InputControl::startFan()
-{
-    _operate.setManualFan(true);
-    _view.updateRelayFlag(UpdateFlag::RELAY_FAN);
-}
-
-// FAN_STOP,
-void InputControl::stopFan()
-{
-    _operate.setManualFan(false);
-    _view.updateRelayFlag(UpdateFlag::RELAY_FAN);
-}
-
-// TURN_START,
-void InputControl::startTurn()
-{
-    _operate.setManualTurn(true);
-    _view.updateRelayFlag(UpdateFlag::RELAY_TURN);
-}
-
-// TURN_STOP,
-void InputControl::stopTurn()
-{
-    _operate.setManualTurn(false);
-    _view.updateRelayFlag(UpdateFlag::RELAY_TURN);
-}
+DEFINE_MANUAL_CONTROL(Heat, RELAY_HEAT)
+DEFINE_MANUAL_CONTROL(Fan, RELAY_FAN)
+DEFINE_MANUAL_CONTROL(Turn, RELAY_TURN)
+DEFINE_MANUAL_CONTROL(Humi, RELAY_HUMI)
 
 // SPECIES,
 void InputControl::updateSelectedSpecies(Species newSpecies)
@@ -287,140 +248,30 @@ void InputControl::decreaseMinute()
     }
 }
 
+#define DEFINE_INC_DEC(Name, Getter, Setter, Min, Max, UseStep) \
+void InputControl::increase##Name() { \
+    uint32_t current = _view.Getter(); \
+    uint16_t step = UseStep ? _baseStep : 1; \
+    if (current < Max) { \
+        uint32_t next = current + step; \
+        _view.Setter(next > Max ? Max : (uint16_t)next); \
+    } \
+} \
+void InputControl::decrease##Name() { \
+    uint32_t current = _view.Getter(); \
+    uint16_t step = UseStep ? _baseStep : 1; \
+    if (current > (uint32_t)Min + step) _view.Setter(current - step); \
+    else _view.Setter(Min); \
+}
+
 // TARGET_TEMP, TARGET_HUMI, TURNINTERVAL
-void InputControl::increaseTemperature()
-{
-    uint16_t next = _view.getTargetTempFixed() + 1;
-    if (next <= 450)
-        _view.setTargetTemp(next);
-}
-
-void InputControl::decreaseTemperature()
-{
-    uint16_t next = _view.getTargetTempFixed() - 1;
-    if (next > 200)
-        _view.setTargetTemp(next);
-}
-
-void InputControl::increaseHumidity()
-{
-    uint16_t next = _view.getTargetHumiFixed() + 1;
-    if (next <= 999)
-        _view.setTargetHumi(next);
-}
-
-void InputControl::decreaseHumidity()
-{
-    uint16_t next = _view.getTargetHumiFixed() - 1;
-    if (next > 0)
-        _view.setTargetHumi(next);
-}
-
-void InputControl::increaseTurnInterval()
-{
-    uint16_t current = _view.getTurnInterval();
-    const uint16_t MAX_VAL = 720;
-
-    if (current < MAX_VAL)
-    {
-        uint16_t step = (current < 10) ? 1 : 10;
-        uint16_t next = current + step;
-
-        _view.setTurnInterval(next > MAX_VAL ? MAX_VAL : next);
-    }
-}
-
-void InputControl::decreaseTurnInterval()
-{
-    uint16_t current = _view.getTurnInterval();
-    const uint16_t MIN_VAL = 0;
-
-    if (current > MIN_VAL)
-    {
-        uint16_t step = (current <= 10) ? 1 : 10;
-        if (current > step)
-        {
-            uint16_t next = current - step;
-            _view.setTurnInterval(next < MIN_VAL ? MIN_VAL : next);
-        }
-        else
-        {
-            _view.setTurnInterval(MIN_VAL);
-        }
-    }
-}
-
-void InputControl::increaseTurnDuration()
-{
-    uint16_t next = _view.getTurnDuration() + 1;
-    if (next < 100)
-    {
-        _view.setTurnDuration(next);
-    }
-}
-
-void InputControl::decreaseTurnDuration()
-{
-    uint16_t next = _view.getTurnDuration() - 1;
-    if (next > 0) // 12시간 * 60분
-    {
-        _view.setTurnDuration(next);
-    }
-}
-
-void InputControl::increasePID_Kp()
-{
-    int16_t current = _view.getPID_Kp();
-    if (current < 32760)
-    {
-        _view.setPID_Kp(current + 1);
-    }
-}
-
-void InputControl::decreasePID_Kp()
-{
-    int16_t current = _view.getPID_Kp();
-    if (current > 0)
-    {
-        _view.setPID_Kp(current - 1);
-    }
-}
-
-void InputControl::increasePID_Ki()
-{
-    int16_t current = _view.getPID_Ki();
-    if (current < 32760)
-    {
-        _view.setPID_Ki(current + 1);
-    }
-}
-
-void InputControl::decreasePID_Ki()
-{
-    int16_t current = _view.getPID_Ki();
-    if (current > 0)
-    {
-        _view.setPID_Ki(current - 1);
-    }
-}
-
-void InputControl::increasePID_Kd()
-{
-    int16_t current = _view.getPID_Kd();
-    if (current < 32760)
-    {
-        _view.setPID_Kd(current + 1);
-    }
-}
-
-void InputControl::decreasePID_Kd()
-{
-    int16_t current = _view.getPID_Kd();
-    if (current > 0)
-    {
-        _view.setPID_Kd(current - 1);
-    }
-}
+DEFINE_INC_DEC(Temperature,  getTargetTempFixed, setTargetTempFixed, 200, 450,  false)
+DEFINE_INC_DEC(Humidity,     getTargetHumiFixed, setTargetHumiFixed, 0,   999,  false)
+DEFINE_INC_DEC(TurnInterval, getTurnInterval,    setTurnInterval,    0,   720,  true)
+DEFINE_INC_DEC(TurnDuration, getTurnDuration,    setTurnDuration,    0,   99,   true)
+DEFINE_INC_DEC(PID_Kp,       getPID_Kp,          setPID_Kp,          0,   32000, true)
+DEFINE_INC_DEC(PID_Ki,       getPID_Ki,          setPID_Ki,          0,   32000, true)
+DEFINE_INC_DEC(PID_Kd,       getPID_Kd,          setPID_Kd,          0,   32000, true)
 
 /* / CONFIRM,    // 확인
 void InputControl::waitConfirm()
@@ -434,4 +285,24 @@ void InputControl::waitConfirm()
         _view.setup.isWaitingConfirm = false;
     }
     _view.isUpdated = true;
+}*/
+
+/*void InputControl::autoTune()
+{
+    _operate.setAutoTuneWait(true);
+    _view.updateRelayFlag(UpdateFlag::AUTOTUNE);
+}
+
+void InputControl::autoTuneYes()
+{
+    _operate.setAutoTuneWait(false);
+    _operate.setAutoTune(true);
+    _view.updateRelayFlag(UpdateFlag::AUTOTUNE);
+}
+
+void InputControl::autoTuneNo()
+{
+    _operate.setAutoTuneWait(false);
+    _operate.setAutoTune(false);
+    _view.updateRelayFlag(UpdateFlag::AUTOTUNE);
 }*/

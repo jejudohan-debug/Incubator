@@ -2,7 +2,14 @@
 
 void RTCDevice::init()
 {
-    _rtc.begin(DateTime(F(__DATE__), F(__TIME__)));
+    if (!_rtc.begin()) {
+        Serial.println(F("RTC not Found!"));
+    }
+
+    // RTC 시간이 설정되지 않았을 경우, 컴파일된 시간으로 설정
+    if (_rtc.lostPower()) {
+        _rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
+    }
     
     Serial.println(F("Virtual RTC Started..."));
 }
@@ -36,26 +43,3 @@ void RTCDevice::setTime(uint32_t timestamp)
 {
     _rtc.adjust(DateTime(timestamp));
 }
-
-/*void RTCDevice::saveConfig(const SystemConfig &config)
-{
-    // 구조체를 바이트 배열로 캐스팅하여 저장
-    const uint8_t *data = reinterpret_cast<const uint8_t *>(&config);
-
-    for (uint8_t i = 0; i < sizeof(SystemConfig); i++)
-    {
-        _rtc.SetMemory(i, data[i]);
-    }
-    notify(EventFlag::RTC_SAVE, config);
-}
-
-void RTCDevice::loadConfig(SystemConfig &config)
-{
-    uint8_t *data = reinterpret_cast<uint8_t *>(&config);
-
-    for (uint8_t i = 0; i < sizeof(SystemConfig); i++)
-    {
-        data[i] = _rtc.GetMemory(i);
-    }
-    notify(EventFlag::RTC_LOAD, config);
-}*/

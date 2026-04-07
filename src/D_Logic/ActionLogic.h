@@ -34,7 +34,7 @@ private:
 public:
     ActionLogic()
         : _evtBtnMgr(HardwareFactory::getInstance().getButtons()),
-          _evtSSorMgr(HardwareFactory::getInstance().getDHT()),
+          _evtSSorMgr(HardwareFactory::getInstance().getSHT()),
           _evtRtcMgr(HardwareFactory::getInstance().getRTC()),
           _outManager(HardwareFactory::getInstance().getRelays(), HardwareFactory::getInstance().getSSR()),
           _inputControl(_cfgEEPROM),

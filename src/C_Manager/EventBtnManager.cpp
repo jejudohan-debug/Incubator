@@ -21,9 +21,6 @@ void EventBtnManager::onNotify(EventFlag::Type flag, const uint8_t value)
 {
     ButtonEvent evt = static_cast<ButtonEvent>(value);
 
-    //if (_operate.getAutoTune())
-    //    return;
-
     switch (flag)
     {
     case EventFlag::BTN_SELECT:
@@ -81,12 +78,6 @@ void EventBtnManager::handleBtnUp(const ButtonEvent evt)
             _actionQueue.push(SystemAction::HEATER_STOP);
         }
         break;
-    /*case PageStep::AUTOTUNING:
-        if (evt == ButtonEvent::CLICK)
-        {
-            _actionQueue.push(_operate.getAutoTuneWait() ? SystemAction::AUTOTUNE_YES : SystemAction::AUTOTUNE);
-        }
-        break;*/
     default:
         if (evt == ButtonEvent::CLICK || evt == ButtonEvent::LONG_PRESS)
         {
@@ -111,13 +102,15 @@ void EventBtnManager::handleBtnDown(const ButtonEvent evt)
         }
         break;
     case PageStep::CONFIG:
-        break;
-    /*case PageStep::AUTOTUNING:
-        if (evt == ButtonEvent::CLICK && _operate.getAutoTuneWait())
+        if (evt == ButtonEvent::PRESS || evt == ButtonEvent::LONG_PRESS)
         {
-            _actionQueue.push(SystemAction::AUTOTUNE_NO);
+            _actionQueue.push(SystemAction::HUMI_START);
         }
-        break;*/
+        else
+        {
+            _actionQueue.push(SystemAction::HUMI_STOP);
+        }
+        break;
     default:
         if (evt == ButtonEvent::CLICK || evt == ButtonEvent::LONG_PRESS)
         {

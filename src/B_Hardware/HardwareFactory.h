@@ -3,7 +3,7 @@
 #include "HardwarePins.h"
 #include "LcdDisplay.h"
 #include "Button.h"
-#include "DHTSensor.h"
+#include "SHTSensor.h"
 #include "RTCDevice.h"
 #include "RelayActuator.h"
 // #include "EEPROMDevice.h"
@@ -20,7 +20,7 @@ public:
 
     static HardwareFactory &getInstance();
     LcdDisplay &getDisplay();
-    DHTSensor &getDHT();
+    SHTSensor &getSHT();
     RTCDevice &getRTC();
     // EEPROMDevice &getEEPROM();
     //  PID_SSR_Actuator &getSSR();

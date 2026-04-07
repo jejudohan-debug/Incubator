@@ -22,6 +22,13 @@ private:
     DisplayState &_view = SystemContext::getInstance().getView();
     OperateState &_operate = SystemContext::getInstance().getOperate();
 
+    // 연속 클릭 횟수를 기억하는 변수 (static)
+    uint16_t _repeatCount = 0;
+    uint16_t _baseStep = 1;
+    uint32_t _lastActionTime = 0;
+
+    void calcBaseStep();
+
 public:
     InputControl(ConfigEEPROM &cfgEEPROM)
         : _cfgEEPROM(cfgEEPROM) {}
@@ -46,6 +53,8 @@ private:
     void stopFan();
     void startTurn();
     void stopTurn();
+    void startHumi();
+    void stopHumi();
 
     // Species
     void updateSelectedSpecies(Species newSpecies);

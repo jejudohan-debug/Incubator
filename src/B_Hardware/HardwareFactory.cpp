@@ -12,9 +12,9 @@ LcdDisplay &HardwareFactory::getDisplay()
     return display;
 }
 
-DHTSensor &HardwareFactory::getDHT()
+SHTSensor &HardwareFactory::getSHT()
 {
-    static DHTSensor instance(Pins::DHT);
+    static SHTSensor instance(0x44);
     return instance;
 }
 
@@ -52,6 +52,7 @@ RelayActuator::Group<RELAY_CNT> &HardwareFactory::getRelays()
     static RelayActuator::Group<RELAY_CNT> relays =
         {{//RelayActuator(Pins::HEATER),
           RelayActuator(Pins::FAN),
-          RelayActuator(Pins::TURN)}};
+          RelayActuator(Pins::TURN),
+          RelayActuator(Pins::HUMIDIFIER, false)}};
     return relays;
 }

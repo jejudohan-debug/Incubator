@@ -63,12 +63,6 @@ void LcdNormalDisplay::update()
             renderConfig();
         }
         break;
-    /*case PageStep::AUTOTUNING:
-        if (_view.updateFlags)
-        {
-            renderAutoTune();
-        }
-        break;*/
     default:
         break;
     }
@@ -78,8 +72,9 @@ void LcdNormalDisplay::renderConfig()
 {
     SpeciesProfile profile = _species.getProfile(_view.getSpecies());
     _lcd.setCursor(0, 0);
-    printFormatInt(F("Day:"), profile.totalDays);
-    printFormatInt(F(",Hat:"), profile.hatchStartDay);
+    printFormatInt(F("D:"), profile.totalDays);
+    printFormatInt(F(", H:"), profile.hatchStartDay);
+    _lcd.print(F(", "));
 
     renderRelay();
 
@@ -88,50 +83,22 @@ void LcdNormalDisplay::renderConfig()
     _lcd.write('%');
 }
 
-/*void LcdNormalDisplay::renderAutoTune()
-{
-    if (_operate.getAutoTune())
-    {
-        _lcd.setCursor(0, 0);
-        _lcd.print(F("[Auto Tuning]..."));
-        _lcd.setCursor(0,1);
-        printFormatUint16(F("Current: "), _view.getCurrentTempFixed());
-        _lcd.write(223);
-        _lcd.print(F("C "));
-    }
-    else
-    {
-        _lcd.setCursor(0, 0);
-        if (_operate.getAutoTuneWait())
-        {
-            _lcd.print(F("Sure? UP:Y DN:N "));
-        }
-        else
-        {
-            _lcd.print(F("[Auto Tune] UP:Y"));
-        }
-        _lcd.setCursor(0, 1);
-        printFormatUint16(F("Target: "), _view.getTargetTempFixed());
-        _lcd.write(223);
-        _lcd.print(F("C  "));
-    }
-}*/
-
 void LcdNormalDisplay::renderEnv()
 {
     _lcd.setCursor(0, 0);
     printFormatUint16(nullptr, _view.getCurrentTempFixed());
     _lcd.write(223);
-    printFormatUint16(F("C, "), _view.getCurrentHumiFixed());
+    printFormatUint16(F("C,"), _view.getCurrentHumiFixed());
     _lcd.write(37);
 }
 
 void LcdNormalDisplay::renderRelay()
 {
-    _lcd.setCursor(13, 0);
-    _lcd.write(_operate.getRelayHeat() ? 'H' : ' ');
-    _lcd.write(_operate.getRelayFan() ? 'F' : ' ');
-    _lcd.write(_operate.getRelayTurn() ? 'T' : ' ');
+    _lcd.setCursor(12, 0);
+    _lcd.write(_operate.getStateHeat() ? 'H' : ' ');
+    _lcd.write(_operate.getStateFan() ? 'F' : ' ');
+    _lcd.write(_operate.getStateTurn() ? 'T' : ' ');
+    _lcd.write(_operate.getStateHumi() ? 'M' : ' ');
 }
 
 void LcdNormalDisplay::renderTime()
@@ -246,4 +213,33 @@ void LcdNormalDisplay::renderRelays() {
 void LcdNormalDisplay::displayConfig() {
     _lcd.print(F("Species:"));
     _lcd.print(SpeciesContext::getSpeciesName(_view.species));
+}*/
+
+/*void LcdNormalDisplay::renderAutoTune()
+{
+    if (_operate.getAutoTune())
+    {
+        _lcd.setCursor(0, 0);
+        _lcd.print(F("[Auto Tuning]..."));
+        _lcd.setCursor(0,1);
+        printFormatUint16(F("Current: "), _view.getCurrentTempFixed());
+        _lcd.write(223);
+        _lcd.print(F("C "));
+    }
+    else
+    {
+        _lcd.setCursor(0, 0);
+        if (_operate.getAutoTuneWait())
+        {
+            _lcd.print(F("Sure? UP:Y DN:N "));
+        }
+        else
+        {
+            _lcd.print(F("[Auto Tune] UP:Y"));
+        }
+        _lcd.setCursor(0, 1);
+        printFormatUint16(F("Target: "), _view.getTargetTempFixed());
+        _lcd.write(223);
+        _lcd.print(F("C  "));
+    }
 }*/

@@ -144,8 +144,8 @@ void ConfigEEPROM::importViewConfigValue()
 
 void ConfigEEPROM::exportViewConfigValue()
 {
-    _view.setTargetTemp(_config.targetTemp);
-    _view.setTargetHumi(_config.targetHumi);
+    _view.setTargetTempFixed(_config.targetTemp);
+    _view.setTargetHumiFixed(_config.targetHumi);
     _view.setTurnInterval(_config.turnInterval);
     _view.setTurnDuration(_config.turnDuration);
     _view.setStartUnixTime(_config.incubationStartTime);

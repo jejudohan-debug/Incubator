@@ -1,15 +1,74 @@
 #include "OperateState.h"
 
-/*void OperateState::setOperateFlag(OperateStateFlag::Type oFlag, bool enable, UpdateFlag::Type uFlag)
-{
-    if (enable)
-        _operateStateFlag |= oFlag; // 비트 켜기 (OR)
-    else
-        _operateStateFlag &= ~oFlag; // 비트 끄기 (AND NOT)
-    updateFlags |= uFlag;
-}*/
+#define DEFINE_FLAG_METHODS(Name, Flag)                 \
+    void OperateState::set##Name(bool val)              \
+    {                                                   \
+        updateFlag(OperateStateFlag::Flag, val);        \
+    }                                                   \
+    bool OperateState::get##Name() const                \
+    {                                                   \
+        return OperateStateFlag::hasFlag(               \
+            _operateStateFlag, OperateStateFlag::Flag); \
+    }
 
-void OperateState::setOperateFlag(OperateStateFlag::Type oFlag, bool enable)
+bool OperateState::updateFlag(OperateStateFlag::Type flag, bool val)
+{
+    bool current = OperateStateFlag::hasFlag(_operateStateFlag, flag);
+    if (current == val)
+        return false; // 변경 사항 없음
+
+    if (val)
+        _operateStateFlag |= flag;
+    else
+        _operateStateFlag &= ~flag;
+
+    return true; // 변경됨
+}
+
+void OperateState::setHeatOutput(uint16_t output)
+{
+    _heatOutput = output;
+}
+
+uint16_t OperateState::getHeatOutput() const
+{
+    return _heatOutput;
+}
+
+DEFINE_FLAG_METHODS(RelayHeat, HEAT)
+DEFINE_FLAG_METHODS(ManualHeat, M_HEAT)
+DEFINE_FLAG_METHODS(StateHeat, STATE_HEAT)
+
+DEFINE_FLAG_METHODS(RelayFan, FAN)
+DEFINE_FLAG_METHODS(ManualFan, M_FAN)
+DEFINE_FLAG_METHODS(StateFan, STATE_FAN)
+
+DEFINE_FLAG_METHODS(RelayTurn, TURN)
+DEFINE_FLAG_METHODS(ManualTurn, M_TURN)
+DEFINE_FLAG_METHODS(StateTurn, STATE_TURN)
+
+DEFINE_FLAG_METHODS(RelayHumi, HUMIDIFIER)
+DEFINE_FLAG_METHODS(ManualHumi, M_HUMI)
+DEFINE_FLAG_METHODS(StateHumi, STATE_HUMI)
+
+// 시스템 상태
+DEFINE_FLAG_METHODS(Waiting, WAITING)
+DEFINE_FLAG_METHODS(Alert, ALERT)
+
+/*/ 2. 수동 모드 전용 매크로 (Manual 설정 시 Relay도 같이 연동되는 로직)
+#define DEFINE_MANUAL_METHODS(Name, MFlag, RFlag)        \
+    void OperateState::setManual##Name(bool val)         \
+    {                                                    \
+        updateFlag(OperateStateFlag::MFlag, val);        \
+        setRelay##Name(val);                             \
+    }                                                    \
+    bool OperateState::getManual##Name() const           \
+    {                                                    \
+        return OperateStateFlag::hasFlag(                \
+            _operateStateFlag, OperateStateFlag::MFlag); \
+    }*/
+
+/*void OperateState::setOperateFlag(OperateStateFlag::Type oFlag, bool enable)
 {
     if (enable)
         _operateStateFlag |= oFlag; // 비트 켜기 (OR)
@@ -89,6 +148,82 @@ bool OperateState::getManualTurn() const
     return OperateStateFlag::hasFlag(_operateStateFlag, OperateStateFlag::M_TURN);
 }
 
+void OperateState::setRelayHumi(bool val)
+{
+    if (getRelayHumi() == val)
+        return;
+
+    setOperateFlag(OperateStateFlag::HUMIDIFIER, val);
+}
+
+bool OperateState::getRelayHumi() const
+{
+    return OperateStateFlag::hasFlag(_operateStateFlag, OperateStateFlag::HUMIDIFIER);
+}
+
+void OperateState::setManualHumi(bool val)
+{
+    setOperateFlag(OperateStateFlag::M_HUMI, val);
+    setRelayHumi(val);
+}
+
+bool OperateState::getManualHumi() const
+{
+    return OperateStateFlag::hasFlag(_operateStateFlag, OperateStateFlag::M_HUMI);
+}
+
+void OperateState::setStateHeat(bool val)
+{
+    if (getStateHeat() == val)
+        return;
+
+    setOperateFlag(OperateStateFlag::STATE_HEAT, val);
+}
+
+bool OperateState::getStateHeat() const
+{
+    return OperateStateFlag::hasFlag(_operateStateFlag, OperateStateFlag::STATE_HEAT);
+}
+
+void OperateState::setStateFan(bool val)
+{
+    if (getStateFan() == val)
+        return;
+
+    setOperateFlag(OperateStateFlag::STATE_FAN, val);
+}
+
+bool OperateState::getStateFan() const
+{
+    return OperateStateFlag::hasFlag(_operateStateFlag, OperateStateFlag::STATE_FAN);
+}
+
+void OperateState::setStateTurn(bool val)
+{
+    if (getStateTurn() == val)
+        return;
+
+    setOperateFlag(OperateStateFlag::STATE_TURN, val);
+}
+
+bool OperateState::getStateTurn() const
+{
+    return OperateStateFlag::hasFlag(_operateStateFlag, OperateStateFlag::STATE_TURN);
+}
+
+void OperateState::setStateHumi(bool val)
+{
+    if (getStateHumi() == val)
+        return;
+
+    setOperateFlag(OperateStateFlag::STATE_HUMI, val);
+}
+
+bool OperateState::getStateHumi() const
+{
+    return OperateStateFlag::hasFlag(_operateStateFlag, OperateStateFlag::STATE_HUMI);
+}
+
 void OperateState::setWaiting(bool val)
 {
     if (getWaiting() == val)
@@ -113,7 +248,7 @@ void OperateState::setAlert(bool val)
 bool OperateState::getAlert() const
 {
     return OperateStateFlag::hasFlag(_operateStateFlag, OperateStateFlag::ALERT);
-}
+}*/
 
 /*void OperateState::setAutoTune(bool val)
 {

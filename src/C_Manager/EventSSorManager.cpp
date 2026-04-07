@@ -1,32 +1,32 @@
 #include "EventSSorManager.h"
 
-EventSSorManager::EventSSorManager(DHTSensor &dht)
-    : _dht(dht) {}
+EventSSorManager::EventSSorManager(SHTSensor &sht)
+    : _sht(sht) {}
 
 void EventSSorManager::init()
 {
-    _dht.init();
-    _dht.addObserver(this);
+    _sht.init();
+    _sht.addObserver(this);
 
-    _view.setCurrentTemp(_dht.getTemp());
-    _view.setCurrentHumi(_dht.getHumi());
+    _view.setCurrentTempFixed(_sht.getTemp());
+    _view.setCurrentHumiFixed(_sht.getHumi());
 }
 
 void EventSSorManager::update()
 {
-    _dht.update();
+    _sht.update();
 }
 
-void EventSSorManager::onNotify(EventFlag::Type flag, const float value)
+void EventSSorManager::onNotify(EventFlag::Type flag, const uint16_t value)
 {
     switch (flag)
     {
-    case EventFlag::DHT_TEMP:
-        _view.setCurrentTemp(value);
+    case EventFlag::SHT_TEMP:
+        _view.setCurrentTempFixed(value);
         _actionQueue.push(SystemAction::TEMP_CHANGE);
         break;
-    case EventFlag::DHT_HUMI:
-        _view.setCurrentHumi(value);
+    case EventFlag::SHT_HUMI:
+        _view.setCurrentHumiFixed(value);
         _actionQueue.push(SystemAction::HUMI_CHANGE);
         break;
     default:

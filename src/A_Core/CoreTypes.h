@@ -2,9 +2,9 @@
 #include <Arduino.h>
 
 #define BUTTON_CNT 4
-#define RELAY_CNT 2
+#define RELAY_CNT 3
 #define TURN_DURATION 12          // SECONDS
-#define DHT_READ_INTERVAL 2000    // 3 seconds for stability
+#define SHT_READ_INTERVAL 2000    // 3 seconds for stability
 #define SSR_CONTROL_INTERVAL 1000 // 1 seconds
 
 template <typename T, size_t N>
@@ -48,16 +48,15 @@ enum class SystemAction : uint8_t
     FAN_STOP,
     TURN_START,
     TURN_STOP,
+    HUMI_START,
+    HUMI_STOP,
     VALUE_UP,   // 8: 수치 증가 (UP Click)
     VALUE_DOWN, // 9: 수치 감소 (DOWN Click)
     // CONFIRM,    // 확인
     SAVE_YES, // 10: 저장 확인: 예
     SAVE_NO,  // 11: 저장 확인: 아니오
-    AUTOTUNE,
-    AUTOTUNE_YES,
-    AUTOTUNE_NO,
-    BUTTON_LAST = AUTOTUNE_NO,
-    // --- DHT ---
+    BUTTON_LAST = SAVE_NO,
+    // --- SHT ---
     TEMP_CHANGE,
     HUMI_CHANGE,
     SENSOR_LAST = HUMI_CHANGE,
@@ -123,8 +122,8 @@ namespace EventFlag
     const Type BTN_UP = 1 << 1;
     const Type BTN_DOWN = 1 << 2;
     const Type LIMIT_SW = 1 << 3;
-    const Type DHT_TEMP = 1 << 4;
-    const Type DHT_HUMI = 1 << 5;
+    const Type SHT_TEMP = 1 << 4;
+    const Type SHT_HUMI = 1 << 5;
     const Type RTC_TIME = 1 << 6;
     // const Type RTC_LOAD = 1 << 7;
 
@@ -156,23 +155,29 @@ enum class ButtonEvent : uint8_t
 
 namespace OperateStateFlag
 {
-    using Type = uint8_t;
+    using Type = uint16_t;
 
     const Type NONE = 0;
     const Type HEAT = 1 << 0;
     const Type FAN = 1 << 1;
     const Type TURN = 1 << 2;
+    const Type HUMIDIFIER = 1 << 3;
 
     // 수동 모드 플래그들
-    const Type M_HEAT = 1 << 3; // 히터 수동 제어 중
-    const Type M_FAN = 1 << 4;  // 팬 수동 제어 중
-    const Type M_TURN = 1 << 5; // 전란 수동 제어 중
+    const Type M_HEAT = 1 << 4; // 히터 수동 제어 중
+    const Type M_FAN = 1 << 5;  // 팬 수동 제어 중
+    const Type M_TURN = 1 << 6; // 전란 수동 제어 중
+    const Type M_HUMI = 1 << 7; // 가습기 수동 제어 중
 
-    const Type WAITING = 1 << 6;
-    const Type ALERT = 1 << 7;
-    // const Type AUTOTUNE = 1 << 8;
-    // const Type AUTOTUNEWAIT = 1 << 9;
-    const Type ALL = 0xFF;
+    const Type STATE_HEAT = 1 << 8;  // 히터 수동 제어 중
+    const Type STATE_FAN = 1 << 9;   // 팬 수동 제어 중
+    const Type STATE_TURN = 1 << 10; // 전란 수동 제어 중
+    const Type STATE_HUMI = 1 << 11; // 가습기 수동 제어 중
+
+    const Type WAITING = 1 << 12;
+    const Type ALERT = 1 << 13;
+
+    const Type ALL = 0xFFFF;
 
     inline bool hasFlag(Type source, Type target)
     {
@@ -192,13 +197,13 @@ namespace UpdateFlag
     const Type RELAY_FAN = 1 << 3;  // 릴레이 상태 변경
     const Type RELAY_TURN = 1 << 4; // 개별로 on/off 반영
     const Type RELAY_HEAT = 1 << 5; // SSR
+    const Type RELAY_HUMI = 1 << 6;
 
-    const Type TIME = 1 << 6;
-    const Type SPECIES = 1 << 7;
+    const Type TIME = 1 << 7;
+    const Type SPECIES = 1 << 8;
     // 6. 설정 데이터 처리 (EEPROM Load/Save)
-    const Type CONFIG_EVENT = 1 << 8;
-    const Type PID_GAIN = 1 << 9;
-    // const Type AUTOTUNE = 1 << 10;
+    const Type CONFIG_EVENT = 1 << 9;
+    const Type PID_GAIN = 1 << 10;
 
     const Type ALL = 0xFFFF; // 16비트 전체 갱신
 
@@ -218,7 +223,7 @@ struct __attribute__((packed)) SystemConfig
     uint16_t turnDuration;
     uint32_t incubationStartTime; // (4 bytes)
     // PID 게인 (10배 스케일링 된 정수)
-    int16_t pidKp, pidKi, pidKd;
+    uint16_t pidKp, pidKi, pidKd;
 
     uint8_t checksum; // 데이터 무결성 검사 (1 byte)
 

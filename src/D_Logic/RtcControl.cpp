@@ -82,7 +82,7 @@ void RtcControl::calculateBrooderTemp()
     if (lastUpdateWeek != -1 && currentWeek != lastUpdateWeek)
     {
         uint16_t temp = _view.getTargetTempFixed() - WEEKLY_DROP;
-        _view.setTargetTemp(temp);
+        _view.setTargetTempFixed(temp);
         _cfgEEPROM.importViewConfigValue();
     }
     lastUpdateWeek = currentWeek;

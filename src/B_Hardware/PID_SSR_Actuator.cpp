@@ -6,15 +6,12 @@ void PID_SSR_Actuator::init()
     stop(); // 초기 상태는 Off
 }
 
-/*/ PID 연산 결과(0~255)를 업데이트하는 함수
-void PID_SSR_Actuator::setOutput(double val)
-{
-    _output = constrain(val, 0, 255);
-}*/
-
 void PID_SSR_Actuator::setOutput(int16_t val)
 {
-    //_output = constrain(val, 0, 255);
+    if (val < 0)
+        val = 0;
+    else if (val > 1000)
+        val = 1000;
     _output = val;
 }
 
@@ -41,10 +38,10 @@ void PID_SSR_Actuator::controlHeater(uint16_t pidOutput) {
     }
 
     //unsigned long onTime = (SSR_CONTROL_INTERVAL * (unsigned long)pidOutput) / 255;
-    bool shouldBeOn = (millis() - windowStartTime < pidOutput);
+    _state = (millis() - windowStartTime < pidOutput);
 
     // 실제 핀에 나갈 논리값 결정
-    bool currentPinState = _activeLow ? !shouldBeOn : shouldBeOn;
+    bool currentPinState = _activeLow ? !_state : _state;
 
     // 상태가 변했을 때만 실행
     if (currentPinState != lastPinState) {

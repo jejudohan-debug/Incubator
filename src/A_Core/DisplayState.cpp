@@ -1,5 +1,15 @@
 #include "DisplayState.h"
 
+#define MAKE_SETTER_GETTER(Name, Type, Var, Flag) \
+    void DisplayState::set##Name(Type val)        \
+    {                                             \
+        updateField(Var, val, Flag);              \
+    }                                             \
+    Type DisplayState::get##Name() const          \
+    {                                             \
+        return Var;                               \
+    }
+
 void DisplayState::uint16ToString(char *buf, uint16_t value)
 {
     if (value > 999)
@@ -25,6 +35,16 @@ void DisplayState::updateField(T &field, T newValue, UpdateFlag::Type flag)
     }
 }
 
+template <typename T>
+void DisplayState::updateFieldClamped(T &field, T newValue, T minVal, T maxVal, UpdateFlag::Type flag)
+{
+    if (newValue < minVal)
+        newValue = minVal;
+    if (newValue > maxVal)
+        newValue = maxVal;
+    updateField(field, newValue, flag);
+}
+
 // --- setter, getter ---
 void DisplayState::updateRelayFlag(UpdateFlag::Type flag)
 {
@@ -36,105 +56,18 @@ bool DisplayState::getRelayFlag(UpdateFlag::Type flag)
     return UpdateFlag::hasFlag(updateFlags, flag);
 }
 
-void DisplayState::setCurrentTemp(float val)
-{
-    setCurrentTemp(floatToFixed(val));
-}
+MAKE_SETTER_GETTER(CurrentTempFixed, uint16_t, _currentTemp, UpdateFlag::CURRENT_VALUE)
+MAKE_SETTER_GETTER(CurrentHumiFixed, uint16_t, _currentHumi, UpdateFlag::CURRENT_VALUE)
+MAKE_SETTER_GETTER(TargetTempFixed,  uint16_t, _targetTemp,  UpdateFlag::TARGET_VALUE)
+MAKE_SETTER_GETTER(TargetHumiFixed,  uint16_t, _targetHumi,  UpdateFlag::TARGET_VALUE)
 
-void DisplayState::setCurrentTemp(uint16_t val)
-{
-    updateField(_currentTemp, val, UpdateFlag::CURRENT_VALUE);
-}
+MAKE_SETTER_GETTER(TurnInterval, uint16_t, _turnInterval, UpdateFlag::TARGET_VALUE)
+MAKE_SETTER_GETTER(TurnDuration, uint16_t, _turnDuration, UpdateFlag::TARGET_VALUE)
 
-float DisplayState::getCurrentTempFloat() const
-{
-    return fixedToFloat(_currentTemp);
-}
+MAKE_SETTER_GETTER(PID_Kp, uint16_t, _PID_Kp, UpdateFlag::PID_GAIN)
+MAKE_SETTER_GETTER(PID_Ki, uint16_t, _PID_Ki, UpdateFlag::PID_GAIN)
+MAKE_SETTER_GETTER(PID_Kd, uint16_t, _PID_Kd, UpdateFlag::PID_GAIN)
 
-uint16_t DisplayState::getCurrentTempFixed() const
-{
-    return _currentTemp;
-}
-
-void DisplayState::setCurrentHumi(float val)
-{
-    setCurrentHumi(floatToFixed(val));
-}
-
-void DisplayState::setCurrentHumi(uint16_t val)
-{
-    updateField(_currentHumi, val, UpdateFlag::CURRENT_VALUE);
-}
-
-float DisplayState::getCurrentHumiFloat() const
-{
-    return fixedToFloat(_currentHumi);
-}
-
-uint16_t DisplayState::getCurrentHumiFixed() const
-{
-    return _currentHumi;
-}
-
-void DisplayState::setTargetTemp(float val)
-{
-    setTargetTemp(floatToFixed(val));
-}
-
-void DisplayState::setTargetTemp(uint16_t val)
-{
-    updateField(_targetTemp, val, UpdateFlag::TARGET_VALUE);
-}
-
-float DisplayState::getTargetTempFloat() const
-{
-    return fixedToFloat(_targetTemp);
-}
-
-uint16_t DisplayState::getTargetTempFixed() const
-{
-    return _targetTemp;
-}
-
-void DisplayState::setTargetHumi(float val)
-{
-    setTargetHumi(floatToFixed(val));
-}
-
-void DisplayState::setTargetHumi(uint16_t val)
-{
-    updateField(_targetHumi, val, UpdateFlag::TARGET_VALUE);
-}
-
-float DisplayState::getTargetHumiFloat() const
-{
-    return fixedToFloat(_targetHumi);
-}
-
-uint16_t DisplayState::getTargetHumiFixed() const
-{
-    return _targetHumi;
-}
-
-void DisplayState::setTurnInterval(uint16_t val)
-{
-    updateField(_turnInterval, val, UpdateFlag::TARGET_VALUE);
-}
-
-uint16_t DisplayState::getTurnInterval() const
-{
-    return _turnInterval;
-}
-
-void DisplayState::setTurnDuration(uint16_t val)
-{
-    updateField(_turnDuration, val, UpdateFlag::TARGET_VALUE);
-}
-
-uint16_t DisplayState::getTurnDuration() const
-{
-    return _turnDuration;
-}
 
 void DisplayState::setPageStep(PageStep s)
 {
@@ -231,38 +164,6 @@ uint8_t DisplayState::getElapsedMinute() const
 {
     return _m;
 }
-
-void DisplayState::setPID_Kp(int16_t val)
-{
-    if (val < 0)
-    {
-        val = 0;
-    }
-    updateField(_PID_Kp, val, UpdateFlag::PID_GAIN);
-}
-
-void DisplayState::setPID_Ki(int16_t val)
-{
-    if (val < 0)
-    {
-        val = 0;
-    }
-    updateField(_PID_Ki, val, UpdateFlag::PID_GAIN);
-}
-
-void DisplayState::setPID_Kd(int16_t val)
-{
-    if (val < 0)
-    {
-        val = 0;
-    }
-    updateField(_PID_Kd, val, UpdateFlag::PID_GAIN);
-}
-
-int16_t DisplayState::getPID_Kp() const { return _PID_Kp; }
-int16_t DisplayState::getPID_Ki() const { return _PID_Ki; }
-int16_t DisplayState::getPID_Kd() const { return _PID_Kd; }
-
 
 void DisplayState::setAutotuneCycle(int val)
 {

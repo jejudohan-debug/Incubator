@@ -30,7 +30,7 @@ private:
     void renderSetupTitle(uint8_t index);
     void renderSetupValue(uint8_t index);
 
-    void printFormatValue(float value);
+    void printFormatValue(uint16_t value);
 
     void renderSpecies();
     void renderDay();

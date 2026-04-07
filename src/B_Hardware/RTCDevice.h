@@ -1,15 +1,15 @@
 
 #pragma once
 
+#include <Wire.h>
 #include <RtcLib.h>
 #include "A_Core/Interfaces.h"
 
 class RTCDevice : public IDevice
 {
 private:
-    RTC_Millis _rtc;
-    // DeviceIdx _deviceIdx;
-    // uint32_t _lastUnixTime = 0;
+    RTC_DS3231 _rtc;
+
     unsigned long _lastReadTime = 0;
 
 public:
@@ -20,6 +20,4 @@ public:
 
     uint32_t getUnixTime();
     void setTime(uint32_t timestamp);
-    // void saveConfig(const SystemConfig &config);
-    // void loadConfig(SystemConfig &config);
 };

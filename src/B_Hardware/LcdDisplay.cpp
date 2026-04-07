@@ -47,7 +47,7 @@ void LcdDisplay::update()
     //if (!_view.updateFlags)
     //    return;
 
-    if (UpdateFlag::hasFlag(_view.updateFlags, UpdateFlag::STEP))
+    if (_view.hasUpdateFlag(UpdateFlag::STEP))
     {
         _lcd.clear();
     }

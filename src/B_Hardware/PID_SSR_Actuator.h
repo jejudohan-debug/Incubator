@@ -9,8 +9,9 @@ private:
   uint8_t _pin;
   bool _activeLow;
   uint16_t _output; // PID로부터 전달받을 0~1000 사이의 값
+  bool _state = false; // 실제 SSR의 현재 상태 (On/Off)
 
-  DisplayState &_view = SystemContext::getInstance().getView();
+  //DisplayState &_view = SystemContext::getInstance().getView();
 
   void controlHeater(uint16_t pidOutput);
 
@@ -24,7 +25,7 @@ public:
   void update();
   void stop();
   void setOutput(int16_t val);
-  //void setOutput(double val);
+  bool isRunning() const { return _state; }
 };
 
 /*/ PID AutoTune

@@ -2,21 +2,9 @@
 
 void RTCDevice::init()
 {
-    _rtc.Begin();
-    // 1. 쓰기 보호 해제 (DS1302 필수 단계)
-    _rtc.SetIsWriteProtected(false);
-
-    // 시간 기록이 멈춰있다면(새 칩인 경우) 작동 시작
-    if (!_rtc.GetIsRunning())
-    {
-        _rtc.SetIsRunning(true);
-    }
-
-    // 컴파일 시간으로 초기화 (필요시)
-    RtcDateTime compiled = RtcDateTime(__DATE__, __TIME__);
-    if (_rtc.GetDateTime() < compiled) {
-        _rtc.SetDateTime(compiled);
-    }
+    _rtc.begin(DateTime(F(__DATE__), F(__TIME__)));
+    
+    Serial.println(F("Virtual RTC Started..."));
 }
 
 void RTCDevice::update()
@@ -41,14 +29,12 @@ void RTCDevice::update()
 
 uint32_t RTCDevice::getUnixTime()
 {
-    if (!_rtc.GetIsRunning())
-        return 0;
-    return _rtc.GetDateTime().Unix32Time();
+    return _rtc.now().unixtime();
 }
 
 void RTCDevice::setTime(uint32_t timestamp)
 {
-    _rtc.SetDateTime(RtcDateTime(timestamp));
+    _rtc.adjust(DateTime(timestamp));
 }
 
 /*void RTCDevice::saveConfig(const SystemConfig &config)

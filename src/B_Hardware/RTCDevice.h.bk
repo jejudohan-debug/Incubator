@@ -1,22 +1,19 @@
 
 #pragma once
 
-#include <ThreeWire.h>
-#include <RtcDS1302.h>
+#include <RtcLib.h>
 #include "A_Core/Interfaces.h"
 
 class RTCDevice : public IDevice
 {
 private:
-    ThreeWire _wire;
-    RtcDS1302<ThreeWire> _rtc;
+    RTC_Millis _rtc;
     // DeviceIdx _deviceIdx;
     // uint32_t _lastUnixTime = 0;
     unsigned long _lastReadTime = 0;
 
 public:
-    RTCDevice(uint8_t dat, uint8_t clk, uint8_t rst)
-        : _wire(dat, clk, rst), _rtc(_wire) {}
+    RTCDevice() {}
 
     void init() override;
     void update() override;

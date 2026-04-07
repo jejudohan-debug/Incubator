@@ -7,27 +7,46 @@ class OperateState
 private:
     OperateStateFlag::Type _operateStateFlag = OperateStateFlag::NONE;
 
-    //    void setOperateFlag(OperateStateFlag::Type oFlag, bool enable, UpdateFlag::Type uFlag);
-    void setOperateFlag(OperateStateFlag::Type oFlag, bool enable);
+    uint16_t _heatOutput = 0;
+
+    bool updateFlag(OperateStateFlag::Type flag, bool val);
 
 public:
     OperateState() = default;
     OperateState(const OperateState &) = delete;
     OperateState &operator=(const OperateState &) = delete;
 
+    void setHeatOutput(uint16_t output);
+    uint16_t getHeatOutput() const;
+
     void setRelayHeat(bool val);
     bool getRelayHeat() const;
-    void setRelayFan(bool val);
-    bool getRelayFan() const;
-    void setRelayTurn(bool val);
-    bool getRelayTurn() const;
-
     void setManualHeat(bool val);
     bool getManualHeat() const;
+    void setStateHeat(bool val);
+    bool getStateHeat() const;
+    
+
+    void setRelayFan(bool val);
+    bool getRelayFan() const;
     void setManualFan(bool val);
     bool getManualFan() const;
+    void setStateFan(bool val);
+    bool getStateFan() const;
+
+    void setRelayTurn(bool val);
+    bool getRelayTurn() const;
     void setManualTurn(bool val);
     bool getManualTurn() const;
+    void setStateTurn(bool val);
+    bool getStateTurn() const;
+
+    void setRelayHumi(bool val);
+    bool getRelayHumi() const;
+    bool getManualHumi() const;
+    void setManualHumi(bool val);
+    void setStateHumi(bool val);
+    bool getStateHumi() const;
 
     void setWaiting(bool val);
     bool getWaiting() const;

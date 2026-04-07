@@ -28,16 +28,16 @@ const LcdSetupDisplay::RenderFunc LcdSetupDisplay::_renderTable[] PROGMEM = {
     &LcdSetupDisplay::renderPID_Ki,
     &LcdSetupDisplay::renderPID_Kd};
 
-void LcdSetupDisplay::printFormatValue(float value)
+void LcdSetupDisplay::printFormatValue(uint16_t value)
 {
     char buf[6];
-    uint16_t val = value * 10.0f;
+    //uint16_t val = value * 10.0f;
 
-    if (val > 999)
-        val = 999;
+    if (value > 999)
+        value = 999;
 
-    uint16_t integral = val / 10;
-    uint8_t fractional = val % 10;
+    uint16_t integral = value / 10;
+    uint8_t fractional = value % 10;
 
     buf[0] = (integral / 10) + '0';
     buf[1] = (integral % 10) + '0';
@@ -136,7 +136,7 @@ void LcdSetupDisplay::renderMinute()
 void LcdSetupDisplay::renderTemperature()
 {
     //_lcd.print(formatPaddedFloat(_view.getTargetTemp(), 5, 1));
-    printFormatValue(_view.getTargetTempFloat());
+    printFormatValue(_view.getTargetTempFixed());
     _lcd.write(223);
     _lcd.print('C');
 }
@@ -144,7 +144,7 @@ void LcdSetupDisplay::renderTemperature()
 void LcdSetupDisplay::renderHumidity()
 {
     //_lcd.print(formatPaddedFloat(_view.targetHumi, 5, 1));
-    printFormatValue(_view.getTargetHumiFloat());
+    printFormatValue(_view.getTargetHumiFixed());
     _lcd.print('%');
 }
 

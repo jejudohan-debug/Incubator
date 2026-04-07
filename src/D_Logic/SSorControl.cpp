@@ -5,10 +5,7 @@ void SSorControl::handleAction(SystemAction action)
     switch (action)
     {
     case SystemAction::TEMP_CHANGE:
-        if (!_operate.getManualHeat())
-        {
-            _view.updateRelayFlag(UpdateFlag::RELAY_HEAT);
-        }
+        updateHeating();
         break;
     case SystemAction::HUMI_CHANGE:
         humiStrategy();
@@ -16,29 +13,108 @@ void SSorControl::handleAction(SystemAction action)
     default:
         break;
     }
+
+    if (!_operate.getManualFan())
+    {
+        uint16_t currentTemp = _view.getCurrentTempFixed();
+        uint16_t currentHumi = _view.getCurrentHumiFixed();
+        exhaustStrategy(currentTemp, currentHumi);
+    }
+}
+
+void SSorControl::updateHeating()
+{
+    int16_t nextOutput;
+
+    if (_operate.getManualHeat()) {
+        nextOutput = 1000;
+    } else {
+        nextOutput = computeIntegerPID();
+    }
+    
+    _operate.setHeatOutput(nextOutput);
+    //_ssr.setOutput(nextOutput);
+
+    //_ssr.update();
+}
+
+uint16_t SSorControl::computeIntegerPID()
+{
+    // int Kp = 2000;
+    // int Ki = 15;
+    // int Kd = 500;
+
+    int32_t currentTemp = _view.getCurrentTempFixed();
+    int32_t targetTemp = _view.getTargetTempFixed();
+    int32_t error = targetTemp - currentTemp;
+
+   if (abs(error) < 20) 
+    {
+        _integral += error;
+        
+        if (_integral > 500) _integral = 500; 
+        else if (_integral < -500) _integral = -500;
+    }
+    else 
+    {
+        _integral = 0; // 멀리 있을 때는 적분항 초기화 (Windup 방지)
+    }
+
+    int32_t pTerm = (int32_t)_view.getPID_Kp() * error;
+
+    long iTerm = (int32_t)_view.getPID_Ki() * _integral;
+
+    int32_t dTerm = (int32_t)_view.getPID_Kd() * (error - _lastError);
+
+    long totalOutput = (pTerm + iTerm + dTerm) / 100;
+    if (totalOutput >= 1000) return 1000;
+    if (totalOutput <= 0) return 0;
+
+    _lastError = error;
+    return (uint16_t)totalOutput;
 }
 
 void SSorControl::humiStrategy()
 {
-    if (_operate.getManualFan()) return;
-    
-    const uint16_t HUMI_GAP = 20;
+    if (_operate.getManualHumi())
+        return;
+
+    const uint16_t HUMI_GAP = 15;
+    // const unsigned long minOnTime = 2000;
+
     uint16_t currentHumi = _view.getCurrentHumiFixed();
     uint16_t targetHumi = _view.getTargetHumiFixed();
 
-    if (!_operate.getRelayFan())
+    if (currentHumi < (targetHumi - HUMI_GAP))
     {
-        if (currentHumi > targetHumi + HUMI_GAP)
-        {
-            _operate.setRelayFan(true);
-            _view.updateRelayFlag(UpdateFlag::RELAY_FAN);
-        }
-    } else {
-        if (currentHumi < targetHumi - HUMI_GAP)
-        {
-            _operate.setRelayFan(false);
-            _view.updateRelayFlag(UpdateFlag::RELAY_FAN);
-        }
+        // "가습기를 켜고 싶어" (실제 켜질지는 RelayActuator가 판단)
+        _operate.setRelayHumi(true);
+    }
+    else if (currentHumi >= targetHumi)
+    { // 오버슈트 방지를 위해 목표치에서 바로 끄는 것을 권장
+        // "가습기를 끄고 싶어"
+        _operate.setRelayHumi(false);
+    }
+}
+
+void SSorControl::exhaustStrategy(uint16_t currentTemp, uint16_t currentHumi)
+{
+    const uint16_t TEMP_OVER_GAP = 5;  // 0.5도 상한
+    const uint16_t HUMI_OVER_GAP = 30; // 3.0% 상한
+
+    uint16_t targetTemp = _view.getTargetTempFixed();
+    uint16_t targetHumi = _view.getTargetHumiFixed();
+
+    bool startExhaust = (currentTemp > targetTemp + TEMP_OVER_GAP) ||
+                        (currentHumi > targetHumi + HUMI_OVER_GAP);
+
+    bool stopExhaust = (currentTemp <= targetTemp) &&
+                       (currentHumi <= targetHumi);
+
+    if (startExhaust) {
+        _operate.setRelayFan(true);
+    } else if (stopExhaust) {
+        _operate.setRelayFan(false);
     }
 }
 
@@ -86,7 +162,7 @@ void SSorControl::checkHeatHealth()
 
 void SSorControl::tempStrategy()
 {
-    
+
     //const uint16_t TEMP_GAP = 5;
     //const unsigned long RELAY_DELAY = 10000; // 10초
     //unsigned long now = millis();
