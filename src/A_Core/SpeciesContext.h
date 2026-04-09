@@ -28,8 +28,10 @@ public:
     const char *getSpeciesName(uint8_t index);
     uint8_t getTotalDays(uint8_t index);
     uint8_t getHatchStartDay(uint8_t index);
+    uint16_t getHatchHumi(uint8_t index);
     uint8_t getTotalDays(Species s);
     uint8_t getHatchStartDay(Species s);
+    uint16_t getHatchHumi(Species s);
 
     // 부화 설정을 특정 종의 기본값으로 초기화합니다.
     void getConfigOfSpecies(SystemConfig &config, Species species);

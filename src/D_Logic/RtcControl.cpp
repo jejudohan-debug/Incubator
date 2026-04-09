@@ -11,7 +11,24 @@ void RtcControl::handleAction(SystemAction action)
         }
         else
         {
-            turnStrategy();
+            uint8_t elapsed = _view.getElapsedDay();
+            uint8_t hatchDay = _speciesCtx.getHatchStartDay(_view.getSpecies());
+
+            if (elapsed < hatchDay) 
+            {
+                // [입롱 단계] 아직 부화일 전이므로 전란 수행
+                turnStrategy();
+            }
+            else
+            {
+                uint16_t hatchHumi = _speciesCtx.getHatchHumi(_view.getSpecies());
+            
+            // 현재 타겟 습도와 부화 습도가 다를 때만 업데이트 (플래그 낭비 방지)
+                if (_view.getTargetHumiFixed() != hatchHumi) 
+                {
+                    _view.setTargetHumiFixed(hatchHumi);
+                }
+            }
         }
         break;
     case SystemAction::LIMIT_SW:

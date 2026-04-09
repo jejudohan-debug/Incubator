@@ -11,6 +11,7 @@ private:
 
     DisplayState &_view = SystemContext::getInstance().getView();
     OperateState &_operate = SystemContext::getInstance().getOperate();
+    SpeciesContext &_speciesCtx = SystemContext::getInstance().getSpeciesContext();
     // ActionQueue &_queue = SystemContext::getInstance().getActionQueue();
 
     bool _isLimitReached = true;

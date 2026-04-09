@@ -62,6 +62,18 @@ uint8_t SpeciesContext::getHatchStartDay(Species s)
     return getHatchStartDay(static_cast<uint8_t>(s));
 }
 
+uint16_t SpeciesContext::getHatchHumi(uint8_t index)
+{
+    if (index >= static_cast<uint8_t>(Species::COUNT))
+        return -1;
+    return (uint16_t)pgm_read_word(&speciesTable[index].hatchHumi);
+}
+
+uint16_t SpeciesContext::getHatchHumi(Species s)
+{
+    return getHatchHumi(static_cast<uint8_t>(s));
+}
+
 // 특정 종의 프로필을 가져옵니다.
 const SpeciesProfile SpeciesContext::getProfile(Species species)
 {
