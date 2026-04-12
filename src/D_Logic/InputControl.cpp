@@ -116,12 +116,6 @@ void InputControl::moveToNextStep()
 // SAVE_YES,   // 저장 확인: 예
 void InputControl::saveYes()
 {
-    /*if (_operate.getAutoTune())
-    {
-        _operate.setAutoTune(true);
-        return;
-    }*/
-
     if (_cfgEEPROM.getSpecies() != _view.getSpecies())
     {
         _cfgEEPROM.resetSpeciesConfig(_view.getSpecies());
@@ -166,7 +160,6 @@ DEFINE_MANUAL_CONTROL(Humi, RELAY_HUMI)
 void InputControl::updateSelectedSpecies(Species newSpecies)
 {
     _view.setSpecies(newSpecies);
-    _view.updateFlags |= UpdateFlag::SPECIES;
 }
 
 void InputControl::increaseSpecies()
@@ -248,10 +241,10 @@ void InputControl::decreaseMinute()
     }
 }
 
-#define DEFINE_INC_DEC(Name, Getter, Setter, Min, Max, UseStep) \
+#define DEFINE_INC_DEC(Name, Getter, Setter, FStep, Min, Max, UseStep) \
 void InputControl::increase##Name() { \
     uint32_t current = _view.Getter(); \
-    uint16_t step = UseStep ? _baseStep : 1; \
+    uint16_t step = UseStep ? _baseStep : FStep; \
     if (current < Max) { \
         uint32_t next = current + step; \
         _view.Setter(next > Max ? Max : (uint16_t)next); \
@@ -259,19 +252,19 @@ void InputControl::increase##Name() { \
 } \
 void InputControl::decrease##Name() { \
     uint32_t current = _view.Getter(); \
-    uint16_t step = UseStep ? _baseStep : 1; \
+    uint16_t step = UseStep ? _baseStep : FStep; \
     if (current > (uint32_t)Min + step) _view.Setter(current - step); \
     else _view.Setter(Min); \
 }
 
 // TARGET_TEMP, TARGET_HUMI, TURNINTERVAL
-DEFINE_INC_DEC(Temperature,  getTargetTempFixed, setTargetTempFixed, 200, 450,  false)
-DEFINE_INC_DEC(Humidity,     getTargetHumiFixed, setTargetHumiFixed, 0,   999,  false)
-DEFINE_INC_DEC(TurnInterval, getTurnInterval,    setTurnInterval,    0,   720,  true)
-DEFINE_INC_DEC(TurnDuration, getTurnDuration,    setTurnDuration,    0,   99,   true)
-DEFINE_INC_DEC(PID_Kp,       getPID_Kp,          setPID_Kp,          0,   32000, true)
-DEFINE_INC_DEC(PID_Ki,       getPID_Ki,          setPID_Ki,          0,   32000, true)
-DEFINE_INC_DEC(PID_Kd,       getPID_Kd,          setPID_Kd,          0,   32000, true)
+DEFINE_INC_DEC(Temperature,  getTargetTempFixed, setTargetTempFixed, 10, 2000, 4500,  false)
+DEFINE_INC_DEC(Humidity,     getTargetHumiFixed, setTargetHumiFixed, 10, 0,   9999,  false)
+DEFINE_INC_DEC(TurnInterval, getTurnInterval,    setTurnInterval,     1, 0,   720,  true)
+DEFINE_INC_DEC(TurnDuration, getTurnDuration,    setTurnDuration,     1, 0,   99,   true)
+DEFINE_INC_DEC(PID_Kp,       getPID_Kp,          setPID_Kp,           1, 0,   32000, true)
+DEFINE_INC_DEC(PID_Ki,       getPID_Ki,          setPID_Ki,           1, 0,   32000, true)
+DEFINE_INC_DEC(PID_Kd,       getPID_Kd,          setPID_Kd,           1, 0,   32000, true)
 
 /* / CONFIRM,    // 확인
 void InputControl::waitConfirm()

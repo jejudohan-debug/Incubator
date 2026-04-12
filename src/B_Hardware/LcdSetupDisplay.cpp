@@ -31,19 +31,8 @@ const LcdSetupDisplay::RenderFunc LcdSetupDisplay::_renderTable[] PROGMEM = {
 void LcdSetupDisplay::printFormatValue(uint16_t value)
 {
     char buf[6];
-    //uint16_t val = value * 10.0f;
 
-    if (value > 999)
-        value = 999;
-
-    uint16_t integral = value / 10;
-    uint8_t fractional = value % 10;
-
-    buf[0] = (integral / 10) + '0';
-    buf[1] = (integral % 10) + '0';
-    buf[2] = '.';
-    buf[3] = fractional + '0';
-    buf[4] = '\0';
+    _view.uint16ToString(buf, value);
 
     _lcd.print(buf);
 }

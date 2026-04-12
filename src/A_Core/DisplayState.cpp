@@ -10,8 +10,9 @@
         return Var;                               \
     }
 
-void DisplayState::uint16ToString(char *buf, uint16_t value)
+void DisplayState::uint16ToString(char *buf, uint16_t value100)
 {
+    uint16_t value = (value100 + 5) / 10; // 소수점 첫째 자리까지 표현하기 위해 10으로 나눔
     if (value > 999)
         value = 999;
 

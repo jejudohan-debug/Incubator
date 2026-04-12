@@ -25,25 +25,6 @@ void LcdNormalDisplay::printFormatUint16(const __FlashStringHelper *label, uint1
     _lcd.print(buf);
 }
 
-/*void LcdNormalDisplay::printFormatValue(uint16_t value)
-{
-    char buf[6];
-
-    if (value > 999)
-        value = 999;
-
-    uint16_t integral = value / 10;
-    uint8_t fractional = value % 10;
-
-    buf[0] = (integral / 10) + '0';
-    buf[1] = (integral % 10) + '0';
-    buf[2] = '.';
-    buf[3] = fractional + '0';
-    buf[4] = '\0';
-
-    _lcd.print(buf);
-}*/
-
 void LcdNormalDisplay::update()
 {
     switch (_view.getPageStep())

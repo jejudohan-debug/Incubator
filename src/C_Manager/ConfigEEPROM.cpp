@@ -31,18 +31,6 @@ void ConfigEEPROM::init()
 }
 
 void ConfigEEPROM::update() {}
-/*if (_operate.getNeedLoad())
-{
-    if (load())
-    {
-        exportViewConfigValue();
-    }
-}
-else if (_operate.getNeedSave())
-{
-    save();
-}
-_operate.setNeedLoad(false);*/
 
 bool ConfigEEPROM::load()
 {
@@ -55,7 +43,6 @@ bool ConfigEEPROM::load()
         return false;
 
     _config = tempCfg;
-    //notify(EventFlag::RTC_LOAD, _config);
 
     return true;
 }
@@ -68,8 +55,6 @@ void ConfigEEPROM::save()
     _config.checksum = calculateChecksum(_config);
 
     EEPROM.put(CONFIG_ADDR, _config);
-
-    //notify(EventFlag::RTC_SAVE, _config);
 }
 
 // 3. 특정 종 선택 시 설정값 동기화

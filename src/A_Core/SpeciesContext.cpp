@@ -9,11 +9,11 @@ const char name_unknown[] PROGMEM = "Unknown";
 
 const SpeciesProfile SpeciesContext::speciesTable[] PROGMEM = {
     // 부화기간, 파각시작일, 온도, 습도, 파각기습도,전란주기
-    {name_0, 21, 18, 375, 450, 700, 180},
-    {name_1, 28, 25, 372, 550, 800, 120},
-    {name_2, 30, 27, 370, 550, 800, 120},
-    {name_3, 17, 14, 377, 500, 750, 60},
-    {name_4, 30, 0, 350, 500, 500, 0}};
+    {name_0, 21, 18, 3754, 4504, 7004, 180},
+    {name_1, 28, 25, 3724, 5504, 8004, 120},
+    {name_2, 30, 27, 3704, 5504, 8004, 120},
+    {name_3, 17, 14, 3774, 5004, 7504, 60},
+    {name_4, 30, 0, 3504, 5004, 5004, 0}};
 
 /*SpeciesContext &SpeciesContext::getInstance()
 {

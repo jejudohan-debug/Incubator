@@ -2,7 +2,7 @@
 #include "A_Core/SystemContext.h"
 #include "C_Manager/ConfigEEPROM.h"
 
-const int WEEKLY_DROP = 25; // 주당 2.5도씩 감소
+const int WEEKLY_DROP = 250; // 주당 2.5도씩 감소
 
 class RtcControl
 {

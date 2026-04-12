@@ -65,8 +65,8 @@ void SHTSensor::update()
     _lastHumi = h;
     if (t < 0) t = 0;
     if (h < 0) h = 0;
-    notify(EventFlag::SHT_TEMP, (static_cast<uint16_t>(t * 10 + 0.5f)));
-    notify(EventFlag::SHT_HUMI, (static_cast<uint16_t>(h * 10 + 0.5f)));
+    notify(EventFlag::SHT_TEMP, (static_cast<uint16_t>(t * 100 + 0.5f)));
+    notify(EventFlag::SHT_HUMI, (static_cast<uint16_t>(h * 100 + 0.5f)));
 }
 
 bool SHTSensor::isValid() const
