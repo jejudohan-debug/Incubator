@@ -4,8 +4,8 @@
 #define BUTTON_CNT 4
 #define RELAY_CNT 3
 #define TURN_DURATION 12          // SECONDS
-#define SHT_READ_INTERVAL 2000    // 3 seconds for stability
-#define SSR_CONTROL_INTERVAL 1000 // 1 seconds
+#define SHT_READ_INTERVAL 1000
+#define SSR_CONTROL_INTERVAL 1000
 
 template <typename T, size_t N>
 struct NormalGroup

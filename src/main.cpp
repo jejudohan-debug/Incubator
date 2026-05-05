@@ -12,7 +12,7 @@ void setup()
   // delay(500);
 
   Serial.begin(9600);
-  Serial.println("main Setup");
+  Serial.println(F("main Setup"));
 
   Wire.begin();
   Wire.setWireTimeout(3000, true);

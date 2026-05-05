@@ -27,6 +27,7 @@ void RtcControl::handleAction(SystemAction action)
                 if (_view.getTargetHumiFixed() != hatchHumi) 
                 {
                     _view.setTargetHumiFixed(hatchHumi);
+                    _cfgEEPROM.importViewConfigValue(); // 자동 변경된 값을 EEPROM에 저장하여 Select 버튼 막힘 방지
                 }
             }
         }

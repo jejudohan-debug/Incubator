@@ -44,6 +44,16 @@ uint16_t SSorControl::computeIntegerPID()
     int32_t targetTemp = _view.getTargetTempFixed();
     int32_t error = targetTemp - currentTemp;
 
+    if (error > 200) {      // 목표보다 2도 이상 낮을 때
+        _integral = 0;      // 적분항은 비워둠 (나중에 PID 진입 시 깨끗하게 시작)
+        return 1000;        // 무조건 풀가동
+    }
+    
+    if (error < -30) {     // 목표보다 1도 이상 높을 때
+        _integral = 0;
+        return 0;           // 무조건 끔
+    }
+
     int32_t pTerm = (int32_t)_view.getPID_Kp() * error;
 
     int32_t dTerm = (int32_t)_view.getPID_Kd() * (error - _lastError);
