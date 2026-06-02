@@ -18,17 +18,22 @@ void RtcControl::handleAction(SystemAction action)
             {
                 // [입롱 단계] 아직 부화일 전이므로 전란 수행
                 turnStrategy();
+                _isHatchHumiApplied = false;
             }
             else
             {
+                if (_isHatchHumiApplied)
+                    return;
+                // 한번 습도값 변경, 나중에 키보드 수정이 가능
                 uint16_t hatchHumi = _speciesCtx.getHatchHumi(_view.getSpecies());
             
-            // 현재 타겟 습도와 부화 습도가 다를 때만 업데이트 (플래그 낭비 방지)
+                // 현재 타겟 습도와 부화 습도가 다를 때만 업데이트 (플래그 낭비 방지)
                 if (_view.getTargetHumiFixed() != hatchHumi) 
                 {
                     _view.setTargetHumiFixed(hatchHumi);
                     _cfgEEPROM.importViewConfigValue(); // 자동 변경된 값을 EEPROM에 저장하여 Select 버튼 막힘 방지
                 }
+                _isHatchHumiApplied = true;
             }
         }
         break;
@@ -90,18 +95,41 @@ void RtcControl::turnStrategy()
 
 void RtcControl::calculateBrooderTemp()
 {
-    static int lastUpdateWeek = -1;
-
     if (_view.getPageStep() == PageStep::DAY)
         return;
 
-    int currentWeek = _view.getElapsedDay() / 7;
+    static int lastUpdateWeek = -1;
+    static unsigned long bootTimer = 0;
 
-    if (lastUpdateWeek != -1 && currentWeek != lastUpdateWeek)
-    {
-        uint16_t temp = _view.getTargetTempFixed() - WEEKLY_DROP;
-        _view.setTargetTempFixed(temp);
-        _cfgEEPROM.importViewConfigValue();
+    if (bootTimer == 0) {
+        bootTimer = millis();
+        return;
     }
-    lastUpdateWeek = currentWeek;
+
+    int elapsedDay = _view.getElapsedDay();
+    if (elapsedDay < 0) elapsedDay = 0;
+    int currentWeek = elapsedDay / 7;
+
+    if (millis() - bootTimer < 3000) 
+    {
+        // 안정화 기간 동안은 lastUpdateWeek를 계속 현재 값으로 갱신만 함 (온도 안 깎음)
+        lastUpdateWeek = currentWeek; 
+        return;
+    }
+
+    if (lastUpdateWeek != -1 && currentWeek > lastUpdateWeek)
+    {
+        uint16_t temp = _view.getTargetTempFixed();
+        
+        // 온도가 WEEKLY_DROP보다 클 때만 감소 (최소 온도 안전장치)
+        if (temp > WEEKLY_DROP) {
+            temp -= WEEKLY_DROP;
+            _view.setTargetTempFixed(temp);
+            _cfgEEPROM.importViewConfigValue();
+        }
+        lastUpdateWeek = currentWeek;
+    }
+    else if (currentWeek < lastUpdateWeek) {
+        lastUpdateWeek = currentWeek;
+    }
 }

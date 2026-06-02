@@ -15,6 +15,7 @@ private:
     // ActionQueue &_queue = SystemContext::getInstance().getActionQueue();
 
     bool _isLimitReached = true;
+    bool _isHatchHumiApplied = false;
 
 public:
     RtcControl(ConfigEEPROM &cfgEEPROM) : _cfgEEPROM(cfgEEPROM) {}
